@@ -6,3 +6,4 @@ export { IPopExtrasProps } from './routing/RoutingState';
 export { IRouter } from './routing/types';
 export { useScrollState } from './components/usePanelScrollFade';
 export { useSwipeBack } from './components/useSwipeBack';
+export { usePanelStateEvents } from './components/PanelContext';
