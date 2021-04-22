@@ -65,6 +65,10 @@ export const MemoryRouter: React.FC<{
     logger.debug(...styledLogMessage(`Router state [${keys}]`), state.items);
   }, [state.items, logger]);
 
+  useEffect(() => {
+    console.log(...styledLogMessage(`Router state`), state);
+  }, [state.items, logger]);
+
   const reportError = useCallback((error: Error | undefined) => {
     if (!error) {
       return;

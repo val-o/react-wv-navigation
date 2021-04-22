@@ -31,7 +31,7 @@ const Main: React.FC = () => {
   const { pushScreen } = useRouter();
 
   useEffect(() => {
-    pushScreen({ key: '1', screen: <LongTextScreen /> });
+    pushScreen({ key: 'root', screen: <LongTextScreen /> });
   }, [pushScreen]);
 
   return null;
@@ -40,7 +40,8 @@ const Main: React.FC = () => {
 export default App;
 
 const LongTextScreen: React.FC = () => {
-  const { pushScreen, popScreen } = useRouter();
+  const router = useRouter();
+  const { pushScreen, popScreen } = router;
 
   return (
     <>
@@ -49,7 +50,10 @@ const LongTextScreen: React.FC = () => {
         <button
           onClick={() => {
             const key = count++ + '';
-            pushScreen({ key: key, screen: <TestScreen screnKey={key} /> });
+            pushScreen({
+              key: key,
+              screen: <TestScreen currentRouter={router} screnKey={key} />,
+            });
           }}
         >
           Complext Screen
@@ -65,7 +69,7 @@ const LongTextScreen: React.FC = () => {
             <p>{t}</p>
           ))}
         <button
-          onClick={() => pushScreen({ key: '2', screen: <LongTextScreen /> })}
+          onClick={() => pushScreen({ key: count++ + '', screen: <LongTextScreen /> })}
         >
           Next
         </button>
@@ -95,14 +99,20 @@ const Interactive: React.FC = () => {
   );
 };
 
-let count = 0;
+let count = 1;
 type PopExtra = { someExtra: string };
 const TestScreen: React.FC<{
+  currentRouter: IRouter;
   screnKey: string;
   withGuard?: boolean;
   // router: IRouter;
 } & IPopExtrasProps<PopExtra>> = props => {
-  const { pushScreen, popScreen, markToClearHistoryUntil } = useRouter();
+  const { currentRouter } = props;
+  const {
+    pushScreen,
+    popScreen,
+    markToClearHistoryUntil,
+  } = props.currentRouter;
   const secondRouter = useRouter('modal');
   const [textState, setTextState] = useState('');
   const [backToKey, setBackToKey] = useState('');
@@ -144,7 +154,12 @@ const TestScreen: React.FC<{
         onClick={() => {
           const newKey = count++;
           pushScreen({
-            screen: <TestScreen screnKey={newKey.toString()} />,
+            screen: (
+              <TestScreen
+                currentRouter={currentRouter}
+                screnKey={newKey.toString()}
+              />
+            ),
             key: newKey.toString(),
           });
         }}
@@ -155,7 +170,13 @@ const TestScreen: React.FC<{
         onClick={() => {
           const newKey = count++;
           pushScreen({
-            screen: <TestScreen withGuard screnKey={newKey.toString()} />,
+            screen: (
+              <TestScreen
+                currentRouter={currentRouter}
+                withGuard
+                screnKey={newKey.toString()}
+              />
+            ),
             key: newKey.toString(),
           });
         }}
@@ -166,7 +187,12 @@ const TestScreen: React.FC<{
         onClick={() => {
           const newKey = count++;
           secondRouter.pushScreen({
-            screen: <TestScreen screnKey={newKey.toString()} />,
+            screen: (
+              <TestScreen
+                currentRouter={secondRouter}
+                screnKey={newKey.toString()}
+              />
+            ),
             key: newKey.toString(),
           });
         }}
@@ -196,7 +222,9 @@ const TestScreen: React.FC<{
           }
 
           pushScreen({
-            screen: <TestScreen screnKey={newKey} />,
+            screen: (
+              <TestScreen currentRouter={currentRouter} screnKey={newKey} />
+            ),
             key: newKey,
           });
         }}
