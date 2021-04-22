@@ -2,16 +2,16 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import {
   Routing,
-  IRouterOptions,
+  RouterOptions,
   PanelBody,
   PanelHeader,
   useRouter,
   usePanelContext,
-  IRouter,
+  Router,
   IPopExtrasProps,
 } from 'react-wv-navigation';
 
-const ROUTERS: IRouterOptions[] = [
+const ROUTERS: RouterOptions[] = [
   {},
   {
     key: 'modal',
@@ -102,7 +102,7 @@ const Interactive: React.FC = () => {
 let count = 1;
 type PopExtra = { someExtra: string };
 const TestScreen: React.FC<{
-  currentRouter: IRouter;
+  currentRouter: Router;
   screnKey: string;
   withGuard?: boolean;
   // router: IRouter;
