@@ -13,3 +13,4 @@ const WVNavigationContext = createContext<WVNavigationContextValue>({
 });
 
 export const useOptionsContext = () => useContext(WVNavigationContext);
+export const WVNavigationProvider = WVNavigationContext.Provider;

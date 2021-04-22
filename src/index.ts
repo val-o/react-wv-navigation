@@ -7,3 +7,4 @@ export { IRouter } from './routing/types';
 export { useScrollState } from './components/usePanelScrollFade';
 export { useSwipeBack } from './components/useSwipeBack';
 export { usePanelStateEvents } from './components/PanelContext';
+export { WVNavigationProvider } from './WVNavigationProvider';
