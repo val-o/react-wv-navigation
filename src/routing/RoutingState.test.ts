@@ -142,7 +142,7 @@ describe('Routing state', () => {
           { key: '2', originalScreenEl: screenEl },
         ],
       };
-      const newSt = RoutingState.popScreen(st);
+      const newSt = RoutingState.popScreen(st, { toScreen: '1' });
 
       expect(newSt).toEqual([
         {
@@ -163,14 +163,38 @@ describe('Routing state', () => {
           { key: '3', originalScreenEl: screenEl },
         ],
       };
-      const newSt = RoutingState.popScreen(st, { toScreen: '1', including: true });
+      const newSt = RoutingState.popScreen(st, {
+        toScreen: '1',
+      });
 
       expect(newSt).toEqual([
         {
           isNavigating: true,
-          items: [
-            { key: '1', originalScreenEl: screenEl },
-          ],
+          items: [{ key: '1', originalScreenEl: screenEl }],
+          poppingEntry: { key: '3', originalScreenEl: screenEl },
+        } as RoutingState.State,
+        undefined,
+      ]);
+    });
+
+    test('to screen with key deep in history including', () => {
+      const st: RoutingState.State = {
+        ...initialState,
+        items: [
+          { key: '1', originalScreenEl: screenEl },
+          { key: '2', originalScreenEl: screenEl },
+          { key: '3', originalScreenEl: screenEl },
+        ],
+      };
+      const newSt = RoutingState.popScreen(st, {
+        toScreen: '2',
+        including: true,
+      });
+
+      expect(newSt).toEqual([
+        {
+          isNavigating: true,
+          items: [{ key: '1', originalScreenEl: screenEl }],
           poppingEntry: { key: '3', originalScreenEl: screenEl },
         } as RoutingState.State,
         undefined,

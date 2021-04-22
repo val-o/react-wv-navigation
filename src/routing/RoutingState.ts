@@ -104,9 +104,7 @@ export const popScreen = (
     if (options?.toScreen) {
       const result = state.items.findIndex(e => e.key === options.toScreen);
       // Exit if no screen has been found
-      if (result < 0) {
-        return undefined;
-      }
+      return result < 0 ? undefined : result;
     }
 
     return state.items.length - 2;
@@ -134,7 +132,6 @@ export const popScreen = (
   }
 
   const newActiveScreen = state.items[newActiveScreenIdx];
-
   const newItems = state.items.slice(0, newActiveScreenIdx + 1);
 
   if (newActiveScreen) {
