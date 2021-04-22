@@ -1,5 +1,5 @@
 import React from 'react';
-import { compact, last, isDefined } from '../utils';
+import { compact, isDefined, last } from '../utils';
 
 export type HistoryEntry = {
   key: string;
@@ -63,6 +63,10 @@ export const pushScreen = (
     return [state, navigationInProgressError];
   }
 
+  if (state.items.some(entry => entry.key === options.key)) {
+    return [state, { type: 'DuplicateKeyFound', key: options.key }];
+  }
+
   const newItems = [
     ...state.items,
     {
@@ -110,21 +114,31 @@ export const popScreen = (
 
   let newActiveScreenIdx = getNewActiveScreenIdx();
 
-  if (!isDefined(newActiveScreenIdx) || newActiveScreenIdx < 0) {
+  if (!isDefined(newActiveScreenIdx)) {
     return [state, newScreenNotFoundError];
   }
+
   newActiveScreenIdx = options?.including
     ? newActiveScreenIdx - 1
     : newActiveScreenIdx;
 
   if (newActiveScreenIdx < 0) {
-    return [state, newScreenNotFoundError];
+    return [
+      {
+        isNavigating: true,
+        items: [],
+        poppingEntry: activeScreen,
+      },
+      undefined,
+    ];
   }
 
   const newActiveScreen = state.items[newActiveScreenIdx];
 
   const newItems = state.items.slice(0, newActiveScreenIdx + 1);
+
   if (newActiveScreen) {
+    // Setting pop extras
     newItems[newItems.length - 1] = {
       ...newActiveScreen,
       originalScreenEl: React.cloneElement(newActiveScreen.originalScreenEl, {
@@ -218,7 +232,9 @@ export const navigationInProgressError: NavigationInProgressError = {
   type: 'NavigationInProgress',
 };
 
-export type PushError = NavigationInProgressError;
+export type PushError =
+  | NavigationInProgressError
+  | { type: 'DuplicateKeyFound'; key: string };
 
 export type NewScreenNotFoundError = { type: 'NewScreenNotFound' };
 export const newScreenNotFoundError: NewScreenNotFoundError = {

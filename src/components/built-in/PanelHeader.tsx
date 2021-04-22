@@ -19,7 +19,7 @@ const rootStyles: React.CSSProperties = {
 };
 
 interface IProps {
-  onBack: () => void;
+  onBack?: () => void;
 }
 export const PanelHeader: React.FC<IProps> = props => {
   const { onBack } = props;
@@ -35,15 +35,3 @@ export const PanelHeader: React.FC<IProps> = props => {
     </>
   );
 };
-
-type IHeaderAction = 'back' | 'close' | 'more' | 'add';
-
-// const ACTION_ICON_MAP: Record<
-//   IHeaderAction,
-//   React.ComponentType<ISvgIconProps>
-// > = {
-//   back: ArrowBack,
-//   close: XIcon,
-//   add: PlusIcon,
-//   more: MoreHorizIcon,
-// };

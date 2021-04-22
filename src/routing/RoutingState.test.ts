@@ -15,13 +15,38 @@ describe('Routing state', () => {
         screen: screenEl,
       });
 
-      expect(newSt).toMatchObject([
+      expect(newSt).toEqual([
         {
           isNavigating: true,
           items: [{ key: '1', originalScreenEl: screenEl }],
           poppingEntry: undefined,
         } as RoutingState.State,
         undefined,
+      ]);
+    });
+    test('duplicated key', () => {
+      const st: RoutingState.State = {
+        isNavigating: false,
+        items: [
+          {
+            key: '1',
+            originalScreenEl: screenEl,
+          },
+        ],
+        poppingEntry: undefined,
+      };
+      const newSt = RoutingState.pushScreen(st, {
+        key: '1',
+        screen: screenEl,
+      });
+
+      expect(newSt).toEqual([
+        {
+          isNavigating: false,
+          items: [{ key: '1', originalScreenEl: screenEl }],
+          poppingEntry: undefined,
+        } as RoutingState.State,
+        { type: 'DuplicateKeyFound', key: '1' } as RoutingState.PushError,
       ]);
     });
 
@@ -34,7 +59,7 @@ describe('Routing state', () => {
         }
       );
 
-      expect(newSt).toMatchObject([
+      expect(newSt).toEqual([
         { ...initialState, isNavigating: true },
         RoutingState.navigationInProgressError,
       ]);
@@ -52,7 +77,7 @@ describe('Routing state', () => {
       };
       const newSt = RoutingState.popScreen(st);
 
-      expect(newSt).toMatchObject([
+      expect(newSt).toEqual([
         {
           isNavigating: true,
           items: [{ key: '1', originalScreenEl: screenEl }],
@@ -69,9 +94,43 @@ describe('Routing state', () => {
       };
       const newSt = RoutingState.popScreen(st);
 
-      expect(newSt).toMatchObject([
-        st,
-        { type: 'NewScreenNotFound' } as RoutingState.PopError,
+      expect(newSt).toEqual([
+        {
+          items: [],
+          isNavigating: true,
+          poppingEntry: { key: '1', originalScreenEl: screenEl },
+        },
+        undefined,
+      ]);
+    });
+
+    test('with pop extras', () => {
+      const st: RoutingState.State = {
+        ...initialState,
+        items: [
+          { key: '1', originalScreenEl: screenEl },
+          { key: '2', originalScreenEl: screenEl },
+        ],
+      };
+      const newSt = RoutingState.popScreen(st, { popExtras: { str: 'hello' } });
+
+      expect(newSt).toEqual([
+        {
+          isNavigating: true,
+          items: [
+            {
+              key: '1',
+              originalScreenEl: React.cloneElement(screenEl, {
+                popExtras: { str: 'hello' },
+              } as any),
+            },
+          ],
+          poppingEntry: {
+            key: '2',
+            originalScreenEl: screenEl,
+          },
+        } as RoutingState.State,
+        undefined,
       ]);
     });
 
@@ -85,7 +144,7 @@ describe('Routing state', () => {
       };
       const newSt = RoutingState.popScreen(st);
 
-      expect(newSt).toMatchObject([
+      expect(newSt).toEqual([
         {
           isNavigating: true,
           items: [{ key: '1', originalScreenEl: screenEl }],
@@ -104,14 +163,13 @@ describe('Routing state', () => {
           { key: '3', originalScreenEl: screenEl },
         ],
       };
-      const newSt = RoutingState.popScreen(st);
+      const newSt = RoutingState.popScreen(st, { toScreen: '1', including: true });
 
-      expect(newSt).toMatchObject([
+      expect(newSt).toEqual([
         {
           isNavigating: true,
           items: [
             { key: '1', originalScreenEl: screenEl },
-            { key: '2', originalScreenEl: screenEl },
           ],
           poppingEntry: { key: '3', originalScreenEl: screenEl },
         } as RoutingState.State,
@@ -128,7 +186,7 @@ describe('Routing state', () => {
         }
       );
 
-      expect(newSt).toMatchObject([
+      expect(newSt).toEqual([
         { ...initialState, isNavigating: true },
         RoutingState.navigationInProgressError,
       ]);
@@ -149,7 +207,7 @@ describe('Routing state', () => {
       };
       const newSt = RoutingState.screenEntered(st, undefined);
 
-      expect(newSt).toMatchObject([
+      expect(newSt).toEqual([
         {
           isNavigating: false,
           items: [

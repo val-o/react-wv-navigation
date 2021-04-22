@@ -5,8 +5,6 @@ import { styledLogMessage, useLazyRef } from '../utils';
 import * as RoutingS from './RoutingState';
 import { IRouter } from './types';
 
-
-
 const getErrorMessage = (
   error:
     | RoutingS.PopError
@@ -31,6 +29,11 @@ const getErrorMessage = (
     case 'ClearHistoryUntilNotFound': {
       return styledLogMessage(
         `Couldn't find screen with key ${error.key} for clearing, doing nothing`
+      );
+    }
+    case 'DuplicateKeyFound': {
+      return styledLogMessage(
+        `Trying to push screen with non-unique key: ${error.key}`
       );
     }
   }

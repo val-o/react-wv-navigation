@@ -22,6 +22,7 @@ const rootStyles: React.CSSProperties = {
   height: '100%',
   overflowY: 'hidden',
   boxShadow: `0px 3px 16px rgba(0, 0, 0, 0.09)`,
+  background: 'white',
 };
 
 const getOverlayedX = () => -window.innerWidth / 2;
