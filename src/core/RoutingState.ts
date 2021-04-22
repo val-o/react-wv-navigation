@@ -174,7 +174,7 @@ export const screenEntered = (
   const [newSt, error] = clearHistory(st, opts);
 
   if (error) {
-    return [newSt, error];
+    return [{ ...newSt, isNavigating: false }, error];
   }
 
   return [

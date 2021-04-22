@@ -1,18 +1,18 @@
 import * as RoutingS from '../core/RoutingState';
 
 export type PanelState =
-  | /* Active */ 'active'
-  | /* Direct previous entry in history */ 'background'
-  | /* deeply in history  */ 'none'
-  | /* Exiting */ 'popped';
+  | 'active' /* Active */
+  | 'background' /* Direct previous entry in history */
+  | 'none' /* deeply in history  */
+  | 'popped' /* Exiting */;
 
-export interface IRouterOptions {
+export interface RouterOptions {
   key?: string;
   initialState?: RoutingS.HistoryEntry[];
   zIndex?: number;
 }
 
-export interface IRouter {
+export interface Router {
   pushScreen(options: RoutingS.PushOptions): void;
   popScreen<TPopExtras extends object = {}>(
     options?: RoutingS.PopOptions<TPopExtras>

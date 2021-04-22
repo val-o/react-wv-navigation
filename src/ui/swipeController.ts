@@ -1,21 +1,21 @@
 import { FullGestureState } from 'react-use-gesture/dist/types';
 
-type ISwipeLitener = (props: FullGestureState<'drag'>) => void;
+type SwipeLitener = (props: FullGestureState<'drag'>) => void;
 
 export const makeSwipeController = () => {
-  let listeners: ISwipeLitener[] = [];
+  let listeners: SwipeLitener[] = [];
 
   return {
-    listenSwipe: (listener: ISwipeLitener) => {
+    listenSwipe: (listener: SwipeLitener) => {
       listeners = [...listeners, listener];
       return () => {
-        listeners = listeners.filter((l) => l !== listener);
+        listeners = listeners.filter(l => l !== listener);
       };
     },
     pushState: (state: FullGestureState<'drag'>) => {
-      listeners.forEach((l) => l(state));
+      listeners.forEach(l => l(state));
     },
   };
 };
 
-export type ISwipeController = ReturnType<typeof makeSwipeController>;
+export type SwipeController = ReturnType<typeof makeSwipeController>;

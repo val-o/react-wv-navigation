@@ -1,14 +1,14 @@
 import React, { useContext, useRef } from 'react';
-import { IRouter, IRouterOptions } from './types';
+import { Router, RouterOptions } from './types';
 import { MemoryRouter } from './MemoryRouter';
 import { useLazyRef } from '../utils';
 
-type IContextValue = Record<string, IRouter>;
+type IContextValue = Record<string, Router>;
 const MemoryNavigationContext = React.createContext<IContextValue>({} as any);
 const DEFAULT_ROUTER_KEY = 'default';
 
 interface IProps {
-  routers: IRouterOptions[];
+  routers: RouterOptions[];
 }
 export const Routing: React.FC<IProps> = props => {
   const { routers, children } = props;

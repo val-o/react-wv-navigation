@@ -1,6 +1,6 @@
 export {
   Routing,
-  IRouterOptions,
+  RouterOptions,
   useRouter,
   usePanelContext,
   PanelState,
@@ -8,7 +8,7 @@ export {
 export { PanelBody, PanelBodyProps } from './ui/built-in/PanelBody';
 export { PanelHeader } from './ui/built-in/PanelHeader';
 export { PopExtrasProps as IPopExtrasProps } from './core/RoutingState';
-export { IRouter } from './ui/types';
+export { Router } from './ui/types';
 export { useScrollState } from './ui/usePanelScrollFade';
 export { useSwipeBack } from './ui/useSwipeBack';
 export { usePanelStateEvents } from './ui/PanelContext';

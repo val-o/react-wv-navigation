@@ -3,7 +3,7 @@ import { Panel } from '../ui/Panel';
 import { makeSwipeController } from './swipeController';
 import { styledLogMessage, useLazyRef } from '../utils';
 import * as RoutingS from '../core/RoutingState';
-import { IRouter } from './types';
+import { Router } from './types';
 
 const getErrorMessage = (
   error:
@@ -46,7 +46,7 @@ type Error =
   | RoutingS.ScreenEnteredError;
 
 export const MemoryRouter: React.FC<{
-  controls?: IRouter;
+  controls?: Router;
   initialState?: RoutingS.HistoryEntry[];
   zIndex?: number;
 }> = ({ initialState, children, zIndex, controls }) => {
@@ -90,20 +90,17 @@ export const MemoryRouter: React.FC<{
     setState(([st]) => RoutingS.popScreen(st, options));
   }, []);
 
-  const handleEnteredScreen = useCallback(
-    () =>
-      setState(([st]) =>
-        RoutingS.screenEntered(st, clearHistoryOptions.current)
-      ),
-    []
-  );
+  const handleEnteredScreen = useCallback(() => {
+    setState(([st]) => RoutingS.screenEntered(st, clearHistoryOptions.current));
+    clearHistoryOptions.current = undefined;
+  }, []);
 
   const handleScreenExited = useCallback(
     () => setState(([st]) => [RoutingS.screenExited(st), undefined]),
     []
   );
 
-  const contextValue: IRouter = useRef({
+  const contextValue: Router = useRef({
     popScreen: popScreen,
     markToClearHistoryUntil: (options: RoutingS.ClearHistoryOptions) => {
       clearHistoryOptions.current = options;

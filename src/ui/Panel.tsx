@@ -10,7 +10,7 @@ import {
   IPanelStateChangeArgs,
   PanelContext,
 } from './PanelContext';
-import { ISwipeController } from './swipeController';
+import { SwipeController } from './swipeController';
 import { PanelState } from './types';
 import { useOptionsContext } from '../WVNavigationProvider';
 
@@ -44,7 +44,7 @@ export interface IPanelAnimationProps {
   // onOverlayed: () => void;
   // onEntered: () => void;
   canGoBack: boolean;
-  swipeController: ISwipeController;
+  swipeController: SwipeController;
 }
 export const Panel: React.FC<IPanelAnimationProps> = props => {
   // const [panelState] = useState();
