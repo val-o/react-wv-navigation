@@ -181,10 +181,6 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
     return release;
   }, [propsRef, pstate, set, swipeController]);
 
-  useMount(() => {
-    console.log('Panelid ' + props.panelId);
-  });
-
   useEffect(() => {
     setTimeout(() => {
       if (

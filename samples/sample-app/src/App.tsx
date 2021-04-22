@@ -9,6 +9,7 @@ import {
   usePanelContext,
   Router,
   IPopExtrasProps,
+  WVNavigationProvider,
 } from 'react-wv-navigation';
 
 const ROUTERS: RouterOptions[] = [
@@ -21,9 +22,11 @@ const ROUTERS: RouterOptions[] = [
 
 function App() {
   return (
-    <Routing routers={ROUTERS}>
-      <Main />
-    </Routing>
+    <WVNavigationProvider value={{ loggingEnabled: true }}>
+      <Routing routers={ROUTERS}>
+        <Main />
+      </Routing>
+    </WVNavigationProvider>
   );
 }
 
@@ -69,7 +72,9 @@ const LongTextScreen: React.FC = () => {
             <p>{t}</p>
           ))}
         <button
-          onClick={() => pushScreen({ key: count++ + '', screen: <LongTextScreen /> })}
+          onClick={() =>
+            pushScreen({ key: count++ + '', screen: <LongTextScreen /> })
+          }
         >
           Next
         </button>

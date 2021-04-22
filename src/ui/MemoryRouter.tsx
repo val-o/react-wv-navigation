@@ -4,6 +4,7 @@ import { makeSwipeController } from './swipeController';
 import { styledLogMessage, useLazyRef } from '../utils';
 import * as RoutingS from '../core/RoutingState';
 import { Router } from './types';
+import { useLogger } from './useLogger';
 
 const getErrorMessage = (
   error:
@@ -52,7 +53,7 @@ export const MemoryRouter: React.FC<{
 }> = ({ initialState, children, zIndex, controls }) => {
   const isRenderedRef = useRef(false);
 
-  const logger = { debug: console.log };
+  const log = useLogger();
   const clearHistoryOptions = useRef<RoutingS.ClearHistoryOptions>();
   const swipeController = useLazyRef(makeSwipeController).current;
 
@@ -62,18 +63,14 @@ export const MemoryRouter: React.FC<{
 
   useEffect(() => {
     const keys = state.items.map(s => s.key).join(',');
-    logger.debug(...styledLogMessage(`Router state [${keys}]`), state.items);
-  }, [state.items, logger]);
-
-  useEffect(() => {
-    console.log(...styledLogMessage(`Router state`), state);
-  }, [state.items, logger]);
+    log(...styledLogMessage(`Router state [${keys}]`), state);
+  }, [state]);
 
   const reportError = useCallback((error: Error | undefined) => {
     if (!error) {
       return;
     }
-    console.log(...getErrorMessage(error));
+    log(...getErrorMessage(error));
   }, []);
 
   useEffect(() => {
@@ -81,12 +78,12 @@ export const MemoryRouter: React.FC<{
   }, [error]);
 
   const pushScreen = useCallback((options: RoutingS.PushOptions) => {
-    console.log(...styledLogMessage(`Pushing screen with key ${options.key}`));
+    log(...styledLogMessage(`Pushing screen with key ${options.key}`));
     setState(([st]) => RoutingS.pushScreen(st, options));
   }, []);
 
   const popScreen = useCallback((options?: RoutingS.PopOptions) => {
-    console.log(...styledLogMessage(`Start popping active screen`));
+    log(...styledLogMessage(`Start popping active screen`));
     setState(([st]) => RoutingS.popScreen(st, options));
   }, []);
 
