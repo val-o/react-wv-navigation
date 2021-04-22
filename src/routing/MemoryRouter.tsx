@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { PanelAnimation } from '../components/PanelAnimation';
+import { Panel } from '../components/Panel';
 import { makeSwipeController } from '../components/swipeController';
 import { useLazyRef } from '../utils';
 import * as RoutingS from './RoutingState';
@@ -152,7 +152,7 @@ export const MemoryRouter: React.FC<{
           {state.items
             .map((it, idx, arr) => {
               return (
-                <PanelAnimation
+                <Panel
                   swipeController={swipeController}
                   panelId={it.key}
                   canGoBack={idx === arr.length - 1 && arr.length > 1}
@@ -167,12 +167,12 @@ export const MemoryRouter: React.FC<{
                   onAnimationDone={handleEnteredScreen}
                 >
                   {it.originalScreenEl}
-                </PanelAnimation>
+                </Panel>
               );
             })
             .concat(
               state.poppingEntry ? (
-                <PanelAnimation
+                <Panel
                   swipeController={swipeController}
                   canGoBack={false}
                   state={'popped'}
@@ -181,7 +181,7 @@ export const MemoryRouter: React.FC<{
                   onAnimationDone={handleScreenExited}
                 >
                   {state.poppingEntry.originalScreenEl}
-                </PanelAnimation>
+                </Panel>
               ) : (
                 []
               )

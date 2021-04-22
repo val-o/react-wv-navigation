@@ -2,13 +2,13 @@ import { Box } from '@material-ui/core';
 import { useLazyRef, noop } from '../utils';
 import React from 'react';
 import { useTimeout } from 'react-use';
-import { PanelAnimation } from './PanelAnimation';
+import { Panel } from './Panel';
 import { PanelBody } from './PanelBody';
 import { PanelHeader } from './PanelHeader';
 import { makeSwipeController } from './swipeController';
 
 export default {
-  title: 'Routing/PanelAnimation2s',
+  title: 'Panel',
   decorators: [],
 };
 
@@ -53,7 +53,7 @@ const Cmp: React.FC = props => {
 const swipeController = makeSwipeController();
 export const JustActiveFromBottom = () => {
   return (
-    <PanelAnimation
+    <Panel
       onAnimationDone={noop}
       swipeController={swipeController}
       canGoBack={false}
@@ -63,12 +63,12 @@ export const JustActiveFromBottom = () => {
       // panelState={EPanelState.Pushing}
     >
       <Cmp />
-    </PanelAnimation>
+    </Panel>
   );
 };
 export const JustActive = () => {
   return (
-    <PanelAnimation
+    <Panel
       onAnimationDone={noop}
       swipeController={swipeController}
       canGoBack={false}
@@ -77,14 +77,14 @@ export const JustActive = () => {
       // panelState={EPanelState.Pushing}
     >
       <Cmp />
-    </PanelAnimation>
+    </Panel>
   );
 };
 
 export const FromActiveToBackground = () => {
   const [isReady] = useTimeout(500);
   return (
-    <PanelAnimation
+    <Panel
       onAnimationDone={noop}
       swipeController={swipeController}
       canGoBack={false}
@@ -93,14 +93,14 @@ export const FromActiveToBackground = () => {
       // panelState={EPanelState.Pushing}
     >
       <Cmp />
-    </PanelAnimation>
+    </Panel>
   );
 };
 
 export const FromActiveToPopped = () => {
   const [isReady] = useTimeout(500);
   return (
-    <PanelAnimation
+    <Panel
       onAnimationDone={noop}
       swipeController={swipeController}
       canGoBack={false}
@@ -108,14 +108,14 @@ export const FromActiveToPopped = () => {
       state={isReady() ? 'popped' : 'active'}
     >
       <Cmp />
-    </PanelAnimation>
+    </Panel>
   );
 };
 
 export const FromBackgroundToActive = () => {
   const [isReady] = useTimeout(500);
   return (
-    <PanelAnimation
+    <Panel
       onAnimationDone={noop}
       swipeController={swipeController}
       canGoBack={true}
@@ -125,7 +125,7 @@ export const FromBackgroundToActive = () => {
       // panelState={EPanelState.Pushing}
     >
       <Cmp />
-    </PanelAnimation>
+    </Panel>
   );
 };
 
@@ -135,7 +135,7 @@ export const ActiveAndBackground = () => {
 
   return (
     <>
-      <PanelAnimation
+      <Panel
         onAnimationDone={noop}
         canGoBack={true}
         swipeController={swipeController}
@@ -145,9 +145,9 @@ export const ActiveAndBackground = () => {
         // panelState={EPanelState.Pushing}
       >
         <Cmp />
-      </PanelAnimation>
+      </Panel>
       {isReady() && (
-        <PanelAnimation
+        <Panel
           onAnimationDone={noop}
           canGoBack={true}
           swipeController={swipeController}
@@ -157,7 +157,7 @@ export const ActiveAndBackground = () => {
           // panelState={EPanelState.Pushing}
         >
           <Cmp />
-        </PanelAnimation>
+        </Panel>
       )}
     </>
   );

@@ -1,13 +1,6 @@
 import { makeStyles } from '@material-ui/core';
 import { useLazyRef } from '../utils';
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { animated, SpringConfig, to, useSpring } from 'react-spring';
 import { useLatest, useMount, usePreviousDistinct } from 'react-use';
 import { useDrag } from 'react-use-gesture';
@@ -56,7 +49,7 @@ export interface IPanelAnimationProps {
   canGoBack: boolean;
   swipeController: ISwipeController;
 }
-export const PanelAnimation: React.FC<IPanelAnimationProps> = props => {
+export const Panel: React.FC<IPanelAnimationProps> = props => {
   // const [panelState] = useState();
   const {
     state: pstate,
