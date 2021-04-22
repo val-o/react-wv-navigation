@@ -22,7 +22,7 @@ export const noop = () => {};
 
 
 export const styledLogMessage = (message: string) => [
-  `%c [🤙🏻 Routing] ${message}`,
+  `%c🤙🏻 Routing%c ${message}`,
   'display: inline-block ; background-color: darkblue ; color: #ffffff ; font-weight: bold ; padding: 2px 2px 2px 2px ; border-radius: 3px',
   '',
 ];
