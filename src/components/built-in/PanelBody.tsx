@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useRef } from 'react';
 import { SAFE_INSETS_BOTTOM, SAFE_INSETS_TOP } from '../constants';
 import { PANEL_HEADER_HEIGHT } from '../constants';
-import { usePanelScrollFade } from '../usePanelScrollFade';
+import { useScrollState } from '../usePanelScrollFade';
 
 const rootStyles: React.CSSProperties = {
   flex: '1 1 auto',
@@ -34,7 +34,7 @@ export interface PanelBodyProps {
 export const PanelBody: React.FC<PanelBodyProps> = props => {
   const { noHeaderPadding, style, containerStyle } = props;
 
-  const scrollableProps = usePanelScrollFade();
+  const scrollableProps = useScrollState();
 
   /**
    * Nested containers done for androids, На андроидах автоматом скукоживаются флексы,

@@ -1,7 +1,7 @@
 import React, { useCallback, useContext } from 'react';
 import { PanelContext } from './PanelContext';
 
-export const usePanelScrollFade = (): Pick<
+export const useScrollState = (): Pick<
   React.HTMLAttributes<HTMLElement>,
   'onScroll'
 > => {
