@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Panel } from '../components/Panel';
 import { makeSwipeController } from '../components/swipeController';
 import { styledLogMessage, useLazyRef } from '../utils';
-import * as RoutingS from './RoutingState';
+import * as RoutingS from '../core/RoutingState';
 import { IRouter } from './types';
 
 const getErrorMessage = (

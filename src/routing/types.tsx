@@ -1,4 +1,4 @@
-import * as RoutingS from './RoutingState';
+import * as RoutingS from '../core/RoutingState';
 
 export interface IRouterOptions {
   key?: string;
