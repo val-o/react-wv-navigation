@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Panel } from '../components/Panel';
-import { makeSwipeController } from '../components/swipeController';
+import { Panel } from '../ui/Panel';
+import { makeSwipeController } from './swipeController';
 import { styledLogMessage, useLazyRef } from '../utils';
 import * as RoutingS from '../core/RoutingState';
 import { IRouter } from './types';

@@ -9,6 +9,7 @@ const rootStyles: React.CSSProperties = {
   flexDirection: 'column',
   overflowY: 'auto',
   paddingBottom: SAFE_INSETS_BOTTOM,
+  background: 'white',
 };
 
 const containerStyles: React.CSSProperties = {

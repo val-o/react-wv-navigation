@@ -48,7 +48,7 @@ export interface PopOptions<TPopExtras extends object = {}> {
   popExtras?: TPopExtras;
 }
 
-export interface IPopExtrasProps<PopExtras extends {}> {
+export interface PopExtrasProps<PopExtras extends {}> {
   popExtras?: PopExtras;
 }
 
@@ -140,7 +140,7 @@ export const popScreen = (
       ...newActiveScreen,
       originalScreenEl: React.cloneElement(newActiveScreen.originalScreenEl, {
         popExtras: options?.popExtras || undefined,
-      } as IPopExtrasProps<object>),
+      } as PopExtrasProps<object>),
     };
   }
 
