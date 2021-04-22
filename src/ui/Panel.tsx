@@ -14,6 +14,8 @@ import { SwipeController } from './swipeController';
 import { PanelState } from './types';
 import { useOptionsContext } from '../WVNavigationProvider';
 
+type AppearAnimation = 'bottom-top' | 'right-left';
+
 const rootStyles: React.CSSProperties = {
   position: 'absolute',
   display: 'flex',
@@ -36,7 +38,7 @@ const SPRING_CONFIG: SpringConfig = {
 
 export interface IPanelAnimationProps {
   // For debugging purposes
-  appearAnimation?: 'bottom-top' | 'right-left';
+  appearAnimation?: AppearAnimation;
   panelId: string;
   state: PanelState;
   onAnimationDone: () => void;
@@ -102,7 +104,7 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
   const bind = useDrag(
     state => {
       const {
-        down,
+        active,
         movement: [mx],
         cancel,
         canceled,
@@ -134,7 +136,7 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
         onRest: () => {},
       });
 
-      if (!down) {
+      if (!active) {
         // Если драгнул больше чем на половину и отпустил
         if (mx > window.innerWidth / 2) {
           swipeBackHandler.handler?.();
