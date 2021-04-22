@@ -1,154 +1,111 @@
-import { compact, last, useLazyRef } from '../utils';
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { useLatest } from 'react-use';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { PanelAnimation } from '../components/PanelAnimation';
 import { makeSwipeController } from '../components/swipeController';
-import {
-  IClearHistoryOptions,
-  IHistoryEntry,
-  IPopOptions,
-  IPushOptions,
-  IRouter,
-  IPopExtrasProps,
-} from './types';
+import { useLazyRef } from '../utils';
+import * as RoutingS from './RoutingState';
+import { IRouter } from './types';
+
+const styledLogMessage = (message: string) => [
+  `%c [🤙🏻 Routing] ${message}`,
+  'display: inline-block ; background-color: darkblue ; color: #ffffff ; font-weight: bold ; padding: 2px 2px 2px 2px ; border-radius: 3px',
+  '',
+];
+
+const getErrorMessage = (
+  error:
+    | RoutingS.PopError
+    | RoutingS.PushError
+    | RoutingS.ClearHistoryError
+    | RoutingS.ScreenEnteredError
+): string[] => {
+  switch (error.type) {
+    case 'NavigationInProgress': {
+      return styledLogMessage(
+        `Trying to navigate while navigation is in progress. Doing nothing...`
+      );
+    }
+    case 'NewScreenNotFound': {
+      return styledLogMessage(`Screen wasn't found during poping`);
+    }
+    case 'NoActiveScreen': {
+      return styledLogMessage(
+        `Cannot pop as there is no screens before active`
+      );
+    }
+    case 'ClearHistoryUntilNotFound': {
+      return styledLogMessage(
+        `Couldn't find screen with key ${error.key} for clearing, doing nothing`
+      );
+    }
+  }
+};
+
+type Error =
+  | RoutingS.PopError
+  | RoutingS.PushError
+  | RoutingS.ClearHistoryError
+  | RoutingS.ScreenEnteredError;
 
 export const MemoryRouter: React.FC<{
   controls?: IRouter;
-  initialState?: IHistoryEntry[];
+  initialState?: RoutingS.HistoryEntry[];
   zIndex?: number;
 }> = ({ initialState, children, zIndex, controls }) => {
   const isRenderedRef = useRef(false);
 
   const logger = { debug: console.log };
-  const [items, setItems] = useState(initialState ? initialState : []);
-  const itemsRef = useLatest(items);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const isNavigatingRef = useLatest(isNavigating);
-  const clearHistoryOptions = useRef<IClearHistoryOptions>();
-  const [poppingEntry, setPoppingEntry] = useState<IHistoryEntry | undefined>();
+  const clearHistoryOptions = useRef<RoutingS.ClearHistoryOptions>();
   const swipeController = useLazyRef(makeSwipeController).current;
 
+  const [[state, error], setState] = useState<
+    [RoutingS.State, Error | undefined]
+  >(() => [RoutingS.create(initialState), undefined]);
+
   useEffect(() => {
-    const keys = items.map(s => s.key).join(',');
-    logger.debug(`[Router] Router state [${keys}]`, items);
-  }, [items, logger]);
+    const keys = state.items.map(s => s.key).join(',');
+    logger.debug(...styledLogMessage(`Router state [${keys}]`), state.items);
+  }, [state.items, logger]);
 
-  const pushScreen = useLazyRef(() => (options: IPushOptions) => {
-    logger.debug(`[Router] Pushing screen with key ${options.key}`);
-    if (isNavigatingRef.current) {
-      logger.debug(
-        '[Navigation] Trying to navigate in the middle of previous navigation'
-      );
+  const reportError = useCallback((error: Error | undefined) => {
+    if (!error) {
       return;
     }
+    console.log(...getErrorMessage(error));
+  }, []);
 
-    // if (options.clearHistory) {
-    //   clearHistoryOptions.current = options.clearHistory;
-    // }
+  useEffect(() => {
+    reportError(error);
+  }, [error]);
 
-    setIsNavigating(true);
-    const newItems = [
-      ...itemsRef.current,
-      {
-        key: options.key,
-        originalScreenEl: options.screen,
-        keepInHistory: options.keepInHistory,
-      },
-    ];
+  const pushScreen = useCallback((options: RoutingS.PushOptions) => {
+    console.log(...styledLogMessage(`Pushing screen with key ${options.key}`));
+    setState(([st]) => RoutingS.pushScreen(st, options));
+  }, []);
 
-    setItems(newItems);
-  });
+  const popScreen = useCallback((options?: RoutingS.PopOptions) => {
+    console.log(...styledLogMessage(`Start popping active screen`));
+    setState(([st]) => RoutingS.popScreen(st, options));
+  }, []);
 
-  const popScreen = useLazyRef(() => (options?: IPopOptions) => {
-    logger.debug(`[Router] Start popping screen`);
-    if (isNavigatingRef.current) {
-      logger.debug(
-        '[Navigation] Trying to navigate in the middle of previous navigation'
-      );
-      return;
-    }
+  const handleEnteredScreen = useCallback(
+    () =>
+      setState(([st]) =>
+        RoutingS.screenEntered(st, clearHistoryOptions.current)
+      ),
+    []
+  );
 
-    const activeScreen = last(itemsRef.current)!;
-    let newActiveScreenIdx = itemsRef.current.length - 2;
-
-    if (options?.toScreen) {
-      newActiveScreenIdx = itemsRef.current.findIndex(
-        e => e.key === options.toScreen
-      );
-      // Exit if no screen has been found
-      if (newActiveScreenIdx < 0) {
-        return;
-      }
-      if (options.including) {
-        newActiveScreenIdx -= 1;
-      }
-      if (newActiveScreenIdx === itemsRef.current.length - 1) {
-        return;
-      }
-    }
-
-    ReactDOM.unstable_batchedUpdates(() => {
-      setIsNavigating(true);
-
-      logger.debug(`[Router] Popping screen with key ${activeScreen.key}`);
-      setPoppingEntry({
-        key: activeScreen.key,
-        originalScreenEl: activeScreen.originalScreenEl,
-      });
-
-      const newActiveScreen = itemsRef.current[newActiveScreenIdx];
-
-      const newItems = itemsRef.current.slice(0, newActiveScreenIdx + 1);
-      if (newActiveScreen) {
-        newItems[newItems.length - 1] = {
-          ...newActiveScreen,
-          originalScreenEl: React.cloneElement(
-            newActiveScreen.originalScreenEl,
-            {
-              popExtras: options?.popExtras || {},
-            } as IPopExtrasProps<object>
-          ),
-        };
-      }
-      setItems(newItems);
-    });
-  });
-
-  const handleEnteredScreen = useLazyRef(() => () => {
-    setIsNavigating(false);
-    if (clearHistoryOptions.current) {
-      const opts = clearHistoryOptions.current;
-      clearHistoryOptions.current = undefined;
-      const screenIndex = itemsRef.current.findIndex(
-        entry => entry.key === opts.untilKey
-      );
-      if (screenIndex < 0) {
-        logger.debug(
-          `[Router] Couldn't find screen with key ${opts.untilKey} for clearing, doing nothing`
-        );
-        return;
-      }
-      setItems(
-        compact([
-          ...itemsRef.current.slice(0, screenIndex + (opts.including ? 0 : 1)),
-          last(itemsRef.current),
-        ])
-      );
-    }
-    setItems(items =>
-      items.filter(
-        (it, idx) => !(idx !== items.length - 1 && it.keepInHistory === false)
-      )
-    );
-  }).current;
+  const handleScreenExited = useCallback(
+    () => setState(([st]) => [RoutingS.screenExited(st), undefined]),
+    []
+  );
 
   const contextValue: IRouter = useRef({
-    popScreen: popScreen.current,
-    markToClearHistoryUntil: (options: IClearHistoryOptions) => {
+    popScreen: popScreen,
+    markToClearHistoryUntil: (options: RoutingS.ClearHistoryOptions) => {
       clearHistoryOptions.current = options;
     },
-    pushScreen: pushScreen.current,
+    pushScreen: pushScreen,
   }).current;
 
   if (!isRenderedRef.current) {
@@ -166,7 +123,7 @@ export const MemoryRouter: React.FC<{
       {/*
         Завернуто в массив , тк реакт начинает странно себя вести(пропадает стейт панелек который далеко в истории) если вставлять обычными чайлдами
       */}
-      {items.length || poppingEntry ? (
+      {state.items.length || state.poppingEntry ? (
         <div
           style={{
             width: '100%',
@@ -178,7 +135,7 @@ export const MemoryRouter: React.FC<{
             zIndex: zIndex,
           }}
         >
-          {isNavigating && (
+          {state.isNavigating && (
             // We show overlay to prevent clicks on animating panels
             <div
               style={{
@@ -192,7 +149,7 @@ export const MemoryRouter: React.FC<{
               }}
             ></div>
           )}
-          {items
+          {state.items
             .map((it, idx, arr) => {
               return (
                 <PanelAnimation
@@ -214,19 +171,16 @@ export const MemoryRouter: React.FC<{
               );
             })
             .concat(
-              poppingEntry ? (
+              state.poppingEntry ? (
                 <PanelAnimation
                   swipeController={swipeController}
                   canGoBack={false}
                   state={'popped'}
-                  panelId={poppingEntry.key}
-                  key={poppingEntry.key}
-                  onAnimationDone={() => {
-                    setIsNavigating(false);
-                    setPoppingEntry(undefined);
-                  }}
+                  panelId={state.poppingEntry.key}
+                  key={state.poppingEntry.key}
+                  onAnimationDone={handleScreenExited}
                 >
-                  {poppingEntry.originalScreenEl}
+                  {state.poppingEntry.originalScreenEl}
                 </PanelAnimation>
               ) : (
                 []

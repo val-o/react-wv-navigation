@@ -1,6 +1,6 @@
 import React, { useContext, useRef } from 'react';
 import { makeStyles } from '@material-ui/core';
-import { IHistoryEntry, IRouter, IRouterOptions } from './types';
+import { IRouter, IRouterOptions } from './types';
 import { MemoryRouter } from './MemoryRouter';
 import { useLazyRef } from '../utils';
 
