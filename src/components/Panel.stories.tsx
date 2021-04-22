@@ -1,10 +1,9 @@
-import { Box } from '@material-ui/core';
 import { useLazyRef, noop } from '../utils';
 import React from 'react';
 import { useTimeout } from 'react-use';
 import { Panel } from './Panel';
-import { PanelBody } from './PanelBody';
-import { PanelHeader } from './PanelHeader';
+import { PanelBody } from './built-in/PanelBody';
+import { PanelHeader } from './built-in/PanelHeader';
 import { makeSwipeController } from './swipeController';
 
 export default {
@@ -15,37 +14,37 @@ export default {
 const Cmp: React.FC = props => {
   return (
     <PanelBody>
-      <PanelHeader onLeftAction={() => {}} leftAction="back"></PanelHeader>
-      <Box>
+      <PanelHeader onBack={() => {}}></PanelHeader>
+      <div>
         Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nisi, saepe
         modi! Obcaecati eum et blanditiis sequi cupiditate consequatur, culpa
         repellendus maxime minima! Dignissimos sequi pariatur, magnam nesciunt
         illum possimus placeat.
-      </Box>
-      <Box>
+      </div>
+      <div>
         Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nisi, saepe
         modi! Obcaecati eum et blanditiis sequi cupiditate consequatur, culpa
         repellendus maxime minima! Dignissimos sequi pariatur, magnam nesciunt
         illum possimus placeat.
-      </Box>
-      <Box>
+      </div>
+      <div>
         Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nisi, saepe
         modi! Obcaecati eum et blanditiis sequi cupiditate consequatur, culpa
         repellendus maxime minima! Dignissimos sequi pariatur, magnam nesciunt
         illum possimus placeat.
-      </Box>
-      <Box>
+      </div>
+      <div>
         Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nisi, saepe
         modi! Obcaecati eum et blanditiis sequi cupiditate consequatur, culpa
         repellendus maxime minima! Dignissimos sequi pariatur, magnam nesciunt
         illum possimus placeat.
-      </Box>
-      <Box>
+      </div>
+      <div>
         Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nisi, saepe
         modi! Obcaecati eum et blanditiis sequi cupiditate consequatur, culpa
         repellendus maxime minima! Dignissimos sequi pariatur, magnam nesciunt
         illum possimus placeat.
-      </Box>
+      </div>
     </PanelBody>
   );
 };

@@ -1,4 +1,3 @@
-import { makeStyles } from '@material-ui/core';
 import { useLazyRef } from '../utils';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { animated, SpringConfig, to, useSpring } from 'react-spring';
@@ -13,19 +12,17 @@ import {
 } from './PanelContext';
 import { ISwipeController } from './swipeController';
 import { PanelState } from './types';
+import { useOptionsContext } from '../WVNavigationProvider';
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    position: 'absolute',
-    display: 'flex',
-    flexDirection: 'column',
-    width: '100%',
-    height: '100%',
-    overflowY: 'hidden',
-    background: theme.palette.background.default,
-    boxShadow: `0px 3px 16px rgba(0, 0, 0, 0.09)`,
-  },
-}));
+const rootStyles: React.CSSProperties = {
+  position: 'absolute',
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  height: '100%',
+  overflowY: 'hidden',
+  boxShadow: `0px 3px 16px rgba(0, 0, 0, 0.09)`,
+};
 
 const getOverlayedX = () => -window.innerWidth / 2;
 
@@ -56,8 +53,8 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
     swipeController,
     appearAnimation = 'right-left',
   } = props;
+  const { panelOptions } = useOptionsContext();
   const propsRef = useLatest(props);
-  const classes = useStyles();
   const cancelDragRef = useRef<() => void>();
   const isAnimating = useRef(true);
   const previousState = usePreviousDistinct(pstate);
@@ -279,6 +276,8 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
           {...bind()}
           key="1"
           style={{
+            ...(rootStyles as any),
+            ...(panelOptions?.style as any),
             // TODO: Remove as any
             zIndex: (pstate === 'background' ? 0 : 10) as any,
             transform: to(
@@ -288,7 +287,7 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
             opacity: sprops.opacity as any,
             paddingTop: SAFE_INSETS_TOP,
           }}
-          className={classes.root}
+          className={panelOptions?.className}
         >
           {props.children}
         </animated.div>

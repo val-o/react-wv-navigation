@@ -19,3 +19,10 @@ export const compact = <T>(arr: T[]): Exclude<T, undefined | null>[] => {
 export const last = <T>(arr: T[]) => arr[arr.length - 1] ?? undefined;
 
 export const noop = () => {};
+
+
+export const styledLogMessage = (message: string) => [
+  `%c [🤙🏻 Routing] ${message}`,
+  'display: inline-block ; background-color: darkblue ; color: #ffffff ; font-weight: bold ; padding: 2px 2px 2px 2px ; border-radius: 3px',
+  '',
+];

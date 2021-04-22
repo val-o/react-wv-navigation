@@ -1,15 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Panel } from '../components/Panel';
 import { makeSwipeController } from '../components/swipeController';
-import { useLazyRef } from '../utils';
+import { styledLogMessage, useLazyRef } from '../utils';
 import * as RoutingS from './RoutingState';
 import { IRouter } from './types';
 
-const styledLogMessage = (message: string) => [
-  `%c [🤙🏻 Routing] ${message}`,
-  'display: inline-block ; background-color: darkblue ; color: #ffffff ; font-weight: bold ; padding: 2px 2px 2px 2px ; border-radius: 3px',
-  '',
-];
+
 
 const getErrorMessage = (
   error:

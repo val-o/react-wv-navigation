@@ -1,5 +1,4 @@
 import React, { useContext, useRef } from 'react';
-import { makeStyles } from '@material-ui/core';
 import { IRouter, IRouterOptions } from './types';
 import { MemoryRouter } from './MemoryRouter';
 import { useLazyRef } from '../utils';
@@ -7,17 +6,12 @@ import { useLazyRef } from '../utils';
 type IContextValue = Record<string, IRouter>;
 const MemoryNavigationContext = React.createContext<IContextValue>({} as any);
 const DEFAULT_ROUTER_KEY = 'default';
-const useStyles = makeStyles(theme => ({
-  root: {},
-}));
 
 interface IProps {
   routers: IRouterOptions[];
 }
 export const Routing: React.FC<IProps> = props => {
   const { routers, children } = props;
-  const classes = useStyles();
-
   const controllers = useLazyRef<IContextValue>(() => {
     return routers.reduce((res, r) => {
       res[r.key ?? DEFAULT_ROUTER_KEY] = {

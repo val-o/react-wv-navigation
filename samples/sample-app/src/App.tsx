@@ -42,7 +42,7 @@ const LongTextScreen: React.FC = () => {
 
   return (
     <>
-      <PanelHeader leftAction='back' onLeftAction={popScreen}></PanelHeader>
+      <PanelHeader onBack={popScreen}></PanelHeader>
       <PanelBody>
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Expedita vitae,
         voluptatibus beatae fuga dolorum sapiente, nam quae amet aliquam
