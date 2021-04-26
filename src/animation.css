@@ -1,0 +1,88 @@
+@keyframes horizontalRightEnter {
+  0% {
+    transform: translateX(100vw) scale(1);
+  }
+
+  80% {
+  }
+
+  100% {
+    transform: translateX(0px) scale(1);
+  }
+}
+
+.rwvnv-horizontalRightEnter {
+  animation-fill-mode: forwards;
+  animation-name: horizontalRightEnter;
+}
+
+@keyframes horizontalRightExit {
+  0% {
+    transform: translateX(0px) scale(1);
+  }
+
+  20% {
+  }
+
+  100% {
+    transform: translateX(100vw) scale(1);
+  }
+}
+
+.rwvnv-horizontalRightExit {
+  animation-fill-mode: forwards;
+  animation-name: horizontalRightExit;
+}
+
+@keyframes horizontalLeftEnter {
+  0% {
+    transform: translateX(-60vw) scale(1);
+  }
+
+  80% {
+  }
+
+  100% {
+    transform: translateX(0px) scale(1);
+  }
+}
+
+.rwvnv-horizontalLeftEnter {
+  animation-name: horizontalLeftEnter;
+  animation-fill-mode: forwards;
+}
+
+@keyframes horizontalLeftExit {
+  0% {
+    transform: translateX(0px) scale(1);
+    opacity: 1;
+  }
+
+  20% {
+  }
+
+  100% {
+    transform: translateX(-60vw) scale(1);
+  }
+}
+
+.rwvnv-horizontalLeftExit {
+  animation-name: horizontalLeftExit;
+  animation-fill-mode: forwards;
+}
+
+@keyframes peek {
+  0% {
+    transform: translateX(0px) scale(1);
+  }
+
+  100% {
+    transform: translateX(10vw) scale(1);
+    /* opacity: 0.7; */
+  }
+}
+
+.rwvnv-peek {
+  animation-name: peek;
+  animation-fill-mode: forwards;
+}

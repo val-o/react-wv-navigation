@@ -11,6 +11,7 @@ import {
   IPopExtrasProps,
   WVNavigationProvider,
 } from 'react-wv-navigation';
+import 'react-wv-navigation/src/animation.css';
 
 const ROUTERS: RouterOptions[] = [
   {},

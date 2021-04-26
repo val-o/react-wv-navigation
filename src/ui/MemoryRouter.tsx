@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Panel } from '../ui/Panel';
+import { Panel } from './transitions/Panel';
 import { makeSwipeController } from './swipeController';
 import { styledLogMessage, useLazyRef } from '../utils';
 import * as RoutingS from '../core/RoutingState';
 import { Router } from './types';
 import { useLogger } from './useLogger';
+import { useOptionsContext } from '../WVNavigationProvider';
 
 const getErrorMessage = (
   error:
@@ -54,6 +55,7 @@ export const MemoryRouter: React.FC<{
   const isRenderedRef = useRef(false);
 
   const log = useLogger();
+  const {} = useOptionsContext();
   const clearHistoryOptions = useRef<RoutingS.ClearHistoryOptions>();
   const swipeController = useLazyRef(makeSwipeController).current;
 
