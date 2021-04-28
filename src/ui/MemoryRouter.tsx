@@ -2,17 +2,181 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Panel } from './transitions/Panel';
 import { makeSwipeController } from './swipeController';
 import { styledLogMessage, useLazyRef } from '../utils';
-import * as RoutingS from '../core/RoutingState';
+import * as RouterState from '../core/RouterState';
 import { Router } from './types';
 import { useLogger } from './useLogger';
 import { useOptionsContext } from '../WVNavigationProvider';
 
+export const MemoryRouter: React.FC<{
+  id: string;
+  controls?: Router;
+  initialState?: RouterState.HistoryEntry[];
+  zIndex: number;
+  isActive: boolean;
+}> = ({ initialState, children, zIndex, isActive, controls, id }) => {
+  const isRenderedRef = useRef(false);
+
+  const log = useLogger();
+  const {} = useOptionsContext();
+  const clearHistoryOptions = useRef<RouterState.ClearHistoryOptions>();
+  const swipeController = useLazyRef(makeSwipeController).current;
+
+  const [[state, error], setState] = useState<
+    [RouterState.State, Error | undefined]
+  >(() => [RouterState.create(initialState), undefined]);
+
+  useEffect(() => {
+    const keys = state.items.map(s => s.key).join(',');
+    log(...styledLogMessage(`Router[${id}] state [${keys}]`), state);
+  }, [state]);
+
+  const reportError = useCallback((error: Error | undefined) => {
+    if (!error) {
+      return;
+    }
+    log(...getErrorMessage(error));
+  }, []);
+
+  useEffect(() => {
+    reportError(error);
+  }, [error]);
+
+  const pushScreen = useCallback((options: RouterState.PushOptions) => {
+    log(
+      ...styledLogMessage(
+        `Router[${id}] Pushing screen with key ${options.key}`
+      )
+    );
+    setState(([st]) => RouterState.pushScreen(st, options));
+  }, []);
+
+  const popScreen = useCallback((options?: RouterState.PopOptions) => {
+    log(...styledLogMessage(`Router[${id}] Start popping active screen`));
+    setState(([st]) => RouterState.popScreen(st, options));
+  }, []);
+
+  const handleEnteredScreen = useCallback(() => {
+    setState(([st]) =>
+      RouterState.screenEntered(st, clearHistoryOptions.current)
+    );
+    clearHistoryOptions.current = undefined;
+  }, []);
+
+  const handleScreenExited = useCallback(
+    () => setState(([st]) => [RouterState.screenExited(st), undefined]),
+    []
+  );
+
+  const contextValue: Router = useRef({
+    popScreen: popScreen,
+    markToClearHistoryUntil: (options: RouterState.ClearHistoryOptions) => {
+      clearHistoryOptions.current = options;
+    },
+    pushScreen: pushScreen,
+  }).current;
+
+  if (!isRenderedRef.current) {
+    // This is not idiomatic react piece of code.
+    if (controls) {
+      controls.markToClearHistoryUntil = contextValue.markToClearHistoryUntil;
+      controls.popScreen = contextValue.popScreen;
+      controls.pushScreen = contextValue.pushScreen;
+    }
+    isRenderedRef.current = true;
+  }
+
+  const screenEls = state.items.map((it, idx, items) => {
+    return (
+      <Panel
+        swipeController={swipeController}
+        panelId={it.key}
+        canGoBack={idx === items.length - 1 && items.length > 1}
+        state={
+          idx === items.length - 1
+            ? 'active'
+            : idx === items.length - 2
+            ? 'background'
+            : 'none'
+        }
+        key={it.key}
+        onAnimationDone={handleEnteredScreen}
+      >
+        {it.originalScreenEl}
+      </Panel>
+    );
+  });
+
+  return (
+    <>
+      {/*
+        Завернуто в массив , тк реакт начинает странно себя вести(пропадает стейт панелек который далеко в истории) если вставлять обычными чайлдами
+      */}
+      {state.items.length || state.poppingEntry ? (
+        <div
+          style={{
+            ...rootStyles,
+            zIndex: isActive ? zIndex : 0,
+            opacity: isActive ? 1 : 0,
+          }}
+        >
+          {/* We show overlay to prevent clicks on animating panels */}
+          {state.isNavigating && overlayEl}
+          {screenEls.concat(
+            state.poppingEntry ? (
+              <Panel
+                swipeController={swipeController}
+                canGoBack={false}
+                state={'popped'}
+                panelId={state.poppingEntry.key}
+                key={state.poppingEntry.key}
+                onAnimationDone={handleScreenExited}
+              >
+                {state.poppingEntry.originalScreenEl}
+              </Panel>
+            ) : (
+              []
+            )
+          )}
+        </div>
+      ) : null}
+      {children}
+    </>
+  );
+};
+
+const rootStyles: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  overflowX: 'hidden',
+  top: 0,
+  left: 0,
+  position: 'absolute',
+  transition: `opacity .15s ease-in`,
+};
+
+const overlayStyles: React.CSSProperties = {
+  position: 'absolute',
+  width: '100%',
+  height: '100%',
+  top: 0,
+  left: 0,
+  zIndex: 100,
+  background: 'transaprent',
+};
+const overlayEl = <div style={overlayStyles}></div>;
+
+type Error =
+  | RouterState.PopError
+  | RouterState.PushError
+  | RouterState.ClearHistoryError
+  | RouterState.ScreenEnteredError;
+
 const getErrorMessage = (
   error:
-    | RoutingS.PopError
-    | RoutingS.PushError
-    | RoutingS.ClearHistoryError
-    | RoutingS.ScreenEnteredError
+    | RouterState.PopError
+    | RouterState.PushError
+    | RouterState.ClearHistoryError
+    | RouterState.ScreenEnteredError
 ): string[] => {
   switch (error.type) {
     case 'NavigationInProgress': {
@@ -39,155 +203,4 @@ const getErrorMessage = (
       );
     }
   }
-};
-
-type Error =
-  | RoutingS.PopError
-  | RoutingS.PushError
-  | RoutingS.ClearHistoryError
-  | RoutingS.ScreenEnteredError;
-
-export const MemoryRouter: React.FC<{
-  controls?: Router;
-  initialState?: RoutingS.HistoryEntry[];
-  zIndex?: number;
-}> = ({ initialState, children, zIndex, controls }) => {
-  const isRenderedRef = useRef(false);
-
-  const log = useLogger();
-  const {} = useOptionsContext();
-  const clearHistoryOptions = useRef<RoutingS.ClearHistoryOptions>();
-  const swipeController = useLazyRef(makeSwipeController).current;
-
-  const [[state, error], setState] = useState<
-    [RoutingS.State, Error | undefined]
-  >(() => [RoutingS.create(initialState), undefined]);
-
-  useEffect(() => {
-    const keys = state.items.map(s => s.key).join(',');
-    log(...styledLogMessage(`Router state [${keys}]`), state);
-  }, [state]);
-
-  const reportError = useCallback((error: Error | undefined) => {
-    if (!error) {
-      return;
-    }
-    log(...getErrorMessage(error));
-  }, []);
-
-  useEffect(() => {
-    reportError(error);
-  }, [error]);
-
-  const pushScreen = useCallback((options: RoutingS.PushOptions) => {
-    log(...styledLogMessage(`Pushing screen with key ${options.key}`));
-    setState(([st]) => RoutingS.pushScreen(st, options));
-  }, []);
-
-  const popScreen = useCallback((options?: RoutingS.PopOptions) => {
-    log(...styledLogMessage(`Start popping active screen`));
-    setState(([st]) => RoutingS.popScreen(st, options));
-  }, []);
-
-  const handleEnteredScreen = useCallback(() => {
-    setState(([st]) => RoutingS.screenEntered(st, clearHistoryOptions.current));
-    clearHistoryOptions.current = undefined;
-  }, []);
-
-  const handleScreenExited = useCallback(
-    () => setState(([st]) => [RoutingS.screenExited(st), undefined]),
-    []
-  );
-
-  const contextValue: Router = useRef({
-    popScreen: popScreen,
-    markToClearHistoryUntil: (options: RoutingS.ClearHistoryOptions) => {
-      clearHistoryOptions.current = options;
-    },
-    pushScreen: pushScreen,
-  }).current;
-
-  if (!isRenderedRef.current) {
-    // This is not idiomatic react piece of code.
-    if (controls) {
-      controls.markToClearHistoryUntil = contextValue.markToClearHistoryUntil;
-      controls.popScreen = contextValue.popScreen;
-      controls.pushScreen = contextValue.pushScreen;
-    }
-    isRenderedRef.current = true;
-  }
-
-  return (
-    <>
-      {/*
-        Завернуто в массив , тк реакт начинает странно себя вести(пропадает стейт панелек который далеко в истории) если вставлять обычными чайлдами
-      */}
-      {state.items.length || state.poppingEntry ? (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            overflowX: 'hidden',
-            top: 0,
-            left: 0,
-            position: 'absolute',
-            zIndex: zIndex,
-          }}
-        >
-          {state.isNavigating && (
-            // We show overlay to prevent clicks on animating panels
-            <div
-              style={{
-                position: 'absolute',
-                width: '100%',
-                height: '100%',
-                top: 0,
-                left: 0,
-                zIndex: 100,
-                background: 'transaprent',
-              }}
-            ></div>
-          )}
-          {state.items
-            .map((it, idx, arr) => {
-              return (
-                <Panel
-                  swipeController={swipeController}
-                  panelId={it.key}
-                  canGoBack={idx === arr.length - 1 && arr.length > 1}
-                  state={
-                    idx === arr.length - 1
-                      ? 'active'
-                      : idx === arr.length - 2
-                      ? 'background'
-                      : 'none'
-                  }
-                  key={it.key}
-                  onAnimationDone={handleEnteredScreen}
-                >
-                  {it.originalScreenEl}
-                </Panel>
-              );
-            })
-            .concat(
-              state.poppingEntry ? (
-                <Panel
-                  swipeController={swipeController}
-                  canGoBack={false}
-                  state={'popped'}
-                  panelId={state.poppingEntry.key}
-                  key={state.poppingEntry.key}
-                  onAnimationDone={handleScreenExited}
-                >
-                  {state.poppingEntry.originalScreenEl}
-                </Panel>
-              ) : (
-                []
-              )
-            )}
-        </div>
-      ) : null}
-      {children}
-    </>
-  );
 };

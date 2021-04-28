@@ -1,5 +1,5 @@
 {
-  "version": "0.1.8",
+  "version": "0.1.9-alpha.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -67,6 +67,6 @@
     "react-spring": "^9.1.2",
     "react-use": "^17.2.3",
     "react-use-gesture": "7.0.15",
-    "use-memo-one": "^1.1.1"
+    "use-memo-one": "^1.1.2"
   }
 }

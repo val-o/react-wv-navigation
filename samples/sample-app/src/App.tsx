@@ -9,27 +9,170 @@ import {
   usePanelContext,
   Router,
   IPopExtrasProps,
+  RoutingOptions,
   WVNavigationProvider,
+  useRouting,
 } from 'react-wv-navigation';
 import 'react-wv-navigation/src/animation.css';
+import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
+import { Restore, Favorite, LocationOn } from '@material-ui/icons';
 
-const ROUTERS: RouterOptions[] = [
-  {},
-  {
-    key: 'modal',
-    zIndex: 10,
+const ROUTERS: RoutingOptions<any> = {
+  routers: {
+    default: {},
+    modal: {
+      zIndex: 10,
+    },
+    recents: {
+      zIndex: 11,
+    },
+    favorites: {
+      zIndex: 12,
+    },
   },
-];
+};
 
 function App() {
   return (
     <WVNavigationProvider value={{ loggingEnabled: true }}>
-      <Routing routers={ROUTERS}>
-        <Main />
+      <Routing routers={ROUTERS.routers}>
+        <MultiTabApp />
       </Routing>
     </WVNavigationProvider>
   );
 }
+
+const BottomNav: React.FC = () => {
+  const { bringToFront } = useRouting();
+
+  return (
+    <BottomNavigation
+      // value={value}
+      // onChange={(event, newValue) => {
+      //   setValue(newValue);
+      // }}
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        borderTop: `1px solid black`,
+      }}
+      showLabels
+    >
+      <BottomNavigationAction
+        onClick={() => bringToFront('recents')}
+        label="Recents"
+        icon={<Restore />}
+      />
+      <BottomNavigationAction
+        onClick={() => bringToFront('favorites')}
+        label="Favorites"
+        icon={<Favorite />}
+      />
+      <BottomNavigationAction
+        onClick={() => bringToFront('default')}
+        label="Nearby"
+        icon={<LocationOn />}
+      />
+    </BottomNavigation>
+  );
+};
+
+const MultiTabApp: React.FC = () => {
+  const defaultRouter = useRouter('default');
+  const recentsRouter = useRouter('recents');
+  const favoritesRouter = useRouter('favorites');
+
+  useEffect(() => {
+    defaultRouter.pushScreen({ key: 'home', screen: <HomeScreen /> });
+    recentsRouter.pushScreen({ key: 'recents', screen: <RecentsScreen /> });
+    favoritesRouter.pushScreen({ key: 'home', screen: <FavoritesScreen /> });
+  }, [defaultRouter, favoritesRouter, recentsRouter]);
+
+  return (
+    <>
+      <BottomNav />
+    </>
+  );
+};
+
+const FavoritesScreen: React.FC = () => {
+  const { pushScreen, popScreen } = useRouter();
+
+  return (
+    <>
+      <PanelHeader onBack={popScreen}></PanelHeader>
+      <PanelBody>
+        Favorites <b />
+        <button>Some Action</button>
+        <p>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Expedita
+          vitae, voluptatibus beatae fuga dolorum sapiente, nam quae amet
+          aliquam necessitatibus ipsa consequatur illo animi ratione, suscipit
+          impedit exercitationem quos dolore.
+        </p>
+        <button
+          onClick={() =>
+            pushScreen({ key: count++ + '', screen: <LongTextScreen /> })
+          }
+        >
+          Next
+        </button>
+        {/* <BottomNav /> */}
+      </PanelBody>
+    </>
+  );
+};
+
+const RecentsScreen: React.FC = () => {
+  const { pushScreen, popScreen } = useRouter();
+
+  return (
+    <>
+      <PanelHeader onBack={popScreen}></PanelHeader>
+      <PanelBody>
+        Recents <b /> Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        Expedita vitae, voluptatibus beatae fuga dolorum sapiente, nam quae amet
+        aliquam necessitatibus ipsa consequatur illo animi ratione, suscipit
+        impedit exercitationem quos dolore.
+        <button
+          onClick={() =>
+            pushScreen({ key: count++ + '', screen: <LongTextScreen /> })
+          }
+        >
+          Next
+        </button>
+        {/* <BottomNav /> */}
+      </PanelBody>
+    </>
+  );
+};
+
+const HomeScreen: React.FC = () => {
+  const { pushScreen, popScreen } = useRouter();
+
+  return (
+    <>
+      <PanelHeader onBack={popScreen}></PanelHeader>
+      <PanelBody>
+        Home <b /> Lorem ipsum dolor sit amet consectetur adipisicing elit.
+        Expedita vitae, voluptatibus beatae fuga dolorum sapiente, nam quae amet
+        aliquam necessitatibus ipsa consequatur illo animi ratione, suscipit
+        impedit exercitationem quos dolore.
+        <button
+          onClick={() =>
+            pushScreen({ key: count++ + '', screen: <LongTextScreen /> })
+          }
+        >
+          Next
+        </button>
+        {/* <BottomNav /> */}
+      </PanelBody>
+    </>
+  );
+};
 
 const Main: React.FC = () => {
   const { pushScreen } = useRouter();
