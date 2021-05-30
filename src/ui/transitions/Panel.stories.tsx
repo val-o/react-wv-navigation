@@ -57,7 +57,6 @@ export const JustActiveFromBottom = () => {
       swipeController={swipeController}
       canGoBack={false}
       panelId="1"
-      appearAnimation="bottom-top"
       state="active"
       // panelState={EPanelState.Pushing}
     >
