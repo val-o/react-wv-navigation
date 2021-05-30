@@ -11,6 +11,7 @@ import {
   IPopExtrasProps,
   RoutingOptions,
   WVNavigationProvider,
+  useActiveRouter,
   useRouting,
 } from 'react-wv-navigation';
 import 'react-wv-navigation/src/animation.css';
@@ -19,15 +20,20 @@ import { Restore, Favorite, LocationOn } from '@material-ui/icons';
 
 const ROUTERS: RoutingOptions<any> = {
   routers: {
-    default: {},
     modal: {
       zIndex: 10,
     },
     recents: {
-      zIndex: 11,
+      zIndex: 10,
     },
     favorites: {
-      zIndex: 12,
+      zIndex: 10,
+    },
+    home: {
+      zIndex: 10,
+    },
+    default: {
+      zIndex: 10,
     },
   },
 };
@@ -36,7 +42,8 @@ function App() {
   return (
     <WVNavigationProvider value={{ loggingEnabled: true }}>
       <Routing routers={ROUTERS.routers}>
-        <MultiTabApp />
+        {/* <MultiTabApp /> */}
+        <Main />
       </Routing>
     </WVNavigationProvider>
   );
@@ -44,6 +51,7 @@ function App() {
 
 const BottomNav: React.FC = () => {
   const { bringToFront } = useRouting();
+  const activeRouterId = useActiveRouter();
 
   return (
     <BottomNavigation
@@ -60,21 +68,25 @@ const BottomNav: React.FC = () => {
         borderTop: `1px solid black`,
       }}
       showLabels
+      value={activeRouterId}
     >
+      <BottomNavigationAction
+        onClick={() => bringToFront('home')}
+        label="home"
+        value="home"
+        icon={<LocationOn />}
+      />
       <BottomNavigationAction
         onClick={() => bringToFront('recents')}
         label="Recents"
+        value="recents"
         icon={<Restore />}
       />
       <BottomNavigationAction
         onClick={() => bringToFront('favorites')}
         label="Favorites"
+        value="favorites"
         icon={<Favorite />}
-      />
-      <BottomNavigationAction
-        onClick={() => bringToFront('default')}
-        label="Nearby"
-        icon={<LocationOn />}
       />
     </BottomNavigation>
   );
@@ -84,12 +96,13 @@ const MultiTabApp: React.FC = () => {
   const defaultRouter = useRouter('default');
   const recentsRouter = useRouter('recents');
   const favoritesRouter = useRouter('favorites');
+  const homeRouter = useRouter('home');
 
   useEffect(() => {
-    defaultRouter.pushScreen({ key: 'home', screen: <HomeScreen /> });
     recentsRouter.pushScreen({ key: 'recents', screen: <RecentsScreen /> });
     favoritesRouter.pushScreen({ key: 'home', screen: <FavoritesScreen /> });
-  }, [defaultRouter, favoritesRouter, recentsRouter]);
+    homeRouter.pushScreen({ key: 'home', screen: <HomeScreen /> });
+  }, [defaultRouter, favoritesRouter, homeRouter, recentsRouter]);
 
   return (
     <>
@@ -133,6 +146,7 @@ const RecentsScreen: React.FC = () => {
     <>
       <PanelHeader onBack={popScreen}></PanelHeader>
       <PanelBody>
+        <div style={{ background: 'blue', width: 40, height: 40 }}></div>
         Recents <b /> Lorem ipsum dolor sit amet consectetur adipisicing elit.
         Expedita vitae, voluptatibus beatae fuga dolorum sapiente, nam quae amet
         aliquam necessitatibus ipsa consequatur illo animi ratione, suscipit

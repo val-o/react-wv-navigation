@@ -1,20 +1,19 @@
-import React, { useContext, useMemo, useRef, useState } from 'react';
-import { Router, RouterOptions } from './types';
-import { MemoryRouter } from './MemoryRouter';
-import { styledLogMessage, useLazyRef } from '../utils';
+import React, { useContext, useRef, useState } from 'react';
+import { RouterController, RouterOptions } from './types';
+import { Router } from './Router';
+import { last, styledLogMessage, useLazyRef } from '../utils';
 import * as RoutingState from '../core/RoutingState';
 import * as RouterState from '../core/RouterState';
 import { useLogger } from './useLogger';
+import { useMemoOne as useMemo } from 'use-memo-one';
+import { RoutingContext, RoutingContextValue } from './RoutingContext';
 
-interface RoutingStateContextValue {
-  state: RoutingState.RoutingState;
-}
+/**
+ * Multiple contexts are used to prevent unnesesary rerendering
+ */
 
-interface RoutingContextValue {
-  bringToFront: (routerKey: string) => void;
-  controllers: Record<string, Router>;
-};
-const RoutingContext = React.createContext<RoutingContextValue>({} as any);
+const ActiveRouterContext = React.createContext<string>({} as any);
+
 const DEFAULT_ROUTER_KEY = 'default';
 const DEFAULT_Z_INDEX = 10;
 
@@ -29,25 +28,18 @@ export const Routing = (
   >
 ) => {
   const { routers, children } = props;
-  const [state, setState] = useState<RoutingState.RoutingState>({
-    activeRouter: Object.values(routers)[0],
-  });
+  const [history, setHistory] = useState<string[]>([Object.keys(routers)[0]!]);
   const log = useLogger();
-  // const [routersState, setRoutersState] = useState<
-  //   Record<string, RoutingS.State>
-  // >(() => {
-  //   const initialState: Record<string, RoutingS.State> = {};
-  //   Object.keys(routers).forEach(key => {
-  //     initialState[key] = RoutingS.create(routers[key].initialState);
-  //   });
-  //   return initialState;
-  // });
 
   const ctxValue = useLazyRef<RoutingContextValue>(() => {
     const ctx: RoutingContextValue = {
-      bringToFront: (key: string) =>
+      bringToFront: (key: string) => {
         // usememo to check routers
-        setState(st => RoutingState.bringToFront(st, routers[key])),
+        setHistory(hist => hist.filter(t => t !== key).concat(key));
+      },
+      exitRouter: (key: string) => {
+        setHistory(hist => hist.filter(t => t !== key));
+      },
       controllers: {},
     };
 
@@ -62,24 +54,28 @@ export const Routing = (
     return ctx;
   }).current;
 
+  const activeRouterKey = last(history)!;
+
   return (
     <>
       <RoutingContext.Provider value={ctxValue}>
-        {Object.keys(routers).map(routerKey => {
-          const routerOpts = routers[routerKey];
-          const controls = ctxValue.controllers[routerKey];
-          return (
-            <MemoryRouter
-              controls={controls}
-              key={routerKey ?? DEFAULT_ROUTER_KEY}
-              id={routerKey}
-              initialState={routerOpts.initialState}
-              zIndex={routerOpts.zIndex ?? DEFAULT_Z_INDEX}
-              isActive={routerOpts === state.activeRouter}
-            ></MemoryRouter>
-          );
-        })}
-        {children}
+        <ActiveRouterContext.Provider value={activeRouterKey}>
+          {Object.keys(routers).map(routerKey => {
+            const routerOpts = routers[routerKey];
+            const controls = ctxValue.controllers[routerKey];
+            return (
+              <Router
+                controls={controls}
+                key={routerKey ?? DEFAULT_ROUTER_KEY}
+                id={routerKey}
+                initialState={routerOpts.initialState}
+                zIndex={routerOpts.zIndex ?? DEFAULT_Z_INDEX}
+                isActive={routerKey === activeRouterKey}
+              ></Router>
+            );
+          })}
+          {children}
+        </ActiveRouterContext.Provider>
       </RoutingContext.Provider>
     </>
   );
@@ -95,8 +91,6 @@ export const useRouter = (key: string = DEFAULT_ROUTER_KEY) => {
   return router;
 };
 
-export const useRouting = (): Pick<RoutingContextValue, 'bringToFront'> => {
-  const context = useContext(RoutingContext);
-
-  return context;
+export const useActiveRouter = () => {
+  return useContext(ActiveRouterContext);
 };

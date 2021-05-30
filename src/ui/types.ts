@@ -12,7 +12,7 @@ export interface RouterOptions {
   zIndex?: number;
 }
 
-export interface Router {
+export interface RouterController {
   pushScreen(options: RoutingS.PushOptions): void;
   popScreen<TPopExtras extends object = {}>(
     options?: RoutingS.PopOptions<TPopExtras>

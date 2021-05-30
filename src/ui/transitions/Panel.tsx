@@ -1,6 +1,12 @@
 import { useLazyRef, compact } from '../../utils';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useLatest, useMount, usePreviousDistinct } from 'react-use';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  useFirstMountState,
+  useLatest,
+  useMount,
+  usePreviousDistinct,
+  useUpdate,
+} from 'react-use';
 import { useDrag } from 'react-use-gesture';
 import { Subject } from 'rxjs';
 import { SAFE_INSETS_TOP } from '../constants';
@@ -12,9 +18,11 @@ import {
 import { SwipeController } from '../swipeController';
 import { PanelState } from '../types';
 import { useOptionsContext } from '../../WVNavigationProvider';
+import { useMemoOne as useMemo } from 'use-memo-one';
 
-type AppearAnimation = 'bottom-top' | 'right-left';
-const ANIMATION_DURATION = 500;
+const ANIMATION_DURATION = 400;
+const SWIPE_CANCEL_ANIM_DURATION = 150;
+const ANIMATION_TRANSITION = `transform ${ANIMATION_DURATION}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
 
 const rootStyles: React.CSSProperties = {
   position: 'absolute',
@@ -28,38 +36,43 @@ const rootStyles: React.CSSProperties = {
 
 const getOverlayedX = () => -window.innerWidth / 2;
 
-type AnimationClass =
-  | 'rwvnv-horizontalRightEnter'
-  | 'rwvnv-horizontalRightExit'
-  | 'rwvnv-horizontalLeftEnter'
-  | 'rwvnv-horizontalLeftExit';
-
-const getPanelClass = (
-  prevState: PanelState | undefined,
-  state: PanelState
-): AnimationClass | undefined => {
+const getTargetX = (state: PanelState): number => {
   if (state === 'active') {
-    if (prevState === 'none' || prevState === 'background') {
-      return 'rwvnv-horizontalLeftEnter';
-    }
-    if (!prevState) {
-      return 'rwvnv-horizontalRightEnter';
-    }
+    return 0;
   }
 
   if (state === 'background') {
-    return 'rwvnv-horizontalLeftExit';
+    return getOverlayedX();
   }
 
   if (state === 'popped') {
-    return 'rwvnv-horizontalRightExit';
+    return window.innerWidth;
   }
 
-  return undefined;
+  return getOverlayedX();
 };
+// const getInitialX = (prevState: PanelState, state: PanelState): number => {
+//   if (state === 'active') {
+//     if (prevState === 'none' || prevState === 'background') {
+//       return getOverlayedX();
+//     }
+//     if (!prevState) {
+//       return window.innerWidth;
+//     }
+//   }
+
+//   if (state === 'background') {
+//     return 'rwvnv-horizontalLeftExit';
+//   }
+
+//   if (state === 'popped') {
+//     return 'rwvnv-horizontalRightExit';
+//   }
+
+//   return undefined;
+// };
 
 export interface IPanelAnimationProps {
-  appearAnimation?: AppearAnimation;
   // For debugging purposes
   panelId: string;
   state: PanelState;
@@ -68,68 +81,99 @@ export interface IPanelAnimationProps {
   swipeController: SwipeController;
 }
 export const Panel: React.FC<IPanelAnimationProps> = props => {
-  // const [panelState] = useState();
   const {
-    state: pstate,
+    state: panelState,
     onAnimationDone,
+    canGoBack,
+    panelId,
     swipeController,
-    appearAnimation = 'right-left',
   } = props;
   const { panelOptions } = useOptionsContext();
   const propsRef = useLatest(props);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const cancelDragRef = useRef<() => void>();
   const isAnimating = useRef(true);
-  const previousState = usePreviousDistinct(pstate);
-  const [swipeReached, setSwipeReached] = useState(false);
+  const previousState = usePreviousDistinct(panelState);
 
   const [swipeBackHandler, setSwipeBackHandler] = useState<{
     handler: (() => void) | undefined;
   }>({
     handler: undefined,
   });
-  const panelStateChangeSubject = useLazyRef(
-    () => new Subject<IPanelStateChangeArgs>()
-  ).current;
 
+  const panelStateChangeSubject = useMemo(
+    () => new Subject<IPanelStateChangeArgs>(),
+    []
+  );
+
+  // Animation for state change
   useEffect(() => {
-    if (pstate !== 'none') {
-      setTimeout(() => {
-        onAnimationDone();
-      }, ANIMATION_DURATION);
+    if (!panelRef.current) {
+      return;
     }
-  }, [pstate]);
+    const handleNewState = (state: PanelState) => {
+      if (state !== 'none') {
+        if (panelRef.current) {
+          isAnimating.current = true;
+          panelRef.current.style.transform = `translateX(${getTargetX(
+            state
+          )}px)`;
+          panelRef.current.style.transition = ANIMATION_TRANSITION;
+          setTimeout(() => {
+            onAnimationDone();
+            if (panelRef.current) {
+              panelRef.current.style.transition = 'none';
+              isAnimating.current = false;
+            }
+          }, ANIMATION_DURATION);
+        }
+      }
+    };
+
+    // We need to skip 1 render cycle to let initial transform styles to be applied
+    setTimeout(() => {
+      handleNewState(panelState);
+    }, 0);
+  }, [previousState, panelState]);
 
   // Активная панелька
   const bind = useDrag(
     state => {
       const {
         active,
+        initial: [initialX],
         movement: [mx],
         cancel,
         canceled,
+        tap,
       } = state;
-      // if (isAnimating.current) {
-      //   return;
-      // }
+      if (isAnimating.current || tap || initialX > 60) {
+        return;
+      }
+      const panelEl = panelRef.current;
+      if (!panelEl) {
+        return;
+      }
       cancelDragRef.current = cancel;
       swipeController.pushState(state);
 
       if (canceled) {
-        setSwipeReached(false);
+        cancelDragRef.current = undefined;
+        panelEl.style.transition = `all ${SWIPE_CANCEL_ANIM_DURATION}ms ease-in-out`;
+        panelEl.style.transform = `translateX(0px)`;
         return;
       }
 
-      // Отменям если начинает свайпать в обратную сторону
+      // Cancel if swipe is going in the wrong direction
       if (mx < 0) {
         cancel?.();
         return;
       }
 
       if (!active) {
-        // Если драгнул больше чем на половину и отпустил
-        if (mx > 30) {
+        // Fire an event if swiped more that half and released
+        if (mx > window.innerWidth / 2) {
           swipeBackHandler.handler?.();
-          setSwipeReached(false);
           return;
         } else {
           cancel?.();
@@ -137,21 +181,48 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
         }
       }
 
-      if (mx > 30) {
-        setSwipeReached(true);
-      }
+      panelEl.style.transform = `translateX(${mx}px)`;
+      panelEl.style.transition = 'none';
     },
     {
       enabled: Boolean(
-        pstate === 'active' &&
-          propsRef.current.canGoBack &&
-          swipeBackHandler.handler
+        panelState === 'active' && canGoBack && swipeBackHandler.handler
       ),
-      filterTaps: false,
+      filterTaps: true,
       pointer: true,
       delay: 100,
+      axis: 'x',
     }
   );
+
+  // Panel on the background
+  useEffect(() => {
+    const panelEl = panelRef.current;
+    if (!panelEl) {
+      return;
+    }
+    if (panelState !== 'background') {
+      return;
+    }
+    const release = swipeController.listenSwipe(state => {
+      if (propsRef.current.state === 'background') {
+        const {
+          canceled,
+          movement: [mx],
+        } = state;
+
+        if (canceled) {
+          panelEl.style.transition = `all ${SWIPE_CANCEL_ANIM_DURATION}ms ease-in-out`;
+          panelEl.style.transform = `translateX(${getOverlayedX()}px)`;
+        } else {
+          const x = getOverlayedX() + mx / 2;
+          panelEl.style.transition = `none`;
+          panelEl.style.transform = `translateX(${x}px)`;
+        }
+      }
+    });
+    return release;
+  }, [propsRef, panelState, swipeController]);
 
   const contextValue: PanelContextValue = useMemo(
     () => ({
@@ -167,11 +238,12 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
 
   return (
     <PanelContext.Provider value={contextValue}>
-      {/* Чтобы повысить перфоманс и при этом дерэжать экраны в памяти, оборачиваем тем же animated.div но не показываем. 
+      {/* Чтобы повысить перфоманс и при этом дерэжать экраны в памяти, оборачиваем тем же animated.div но не показываем.
       Если обернуть обычным дивом, реакт выгрузит чилдренов - стейт потеряется */}
-      {pstate === 'none' ? (
+      {panelState === 'none' ? (
         <div
           key="1"
+          ref={panelRef}
           style={{
             display: 'none',
           }}
@@ -182,14 +254,14 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
         <div
           {...bind()}
           key="1"
+          ref={panelRef}
           style={{
             ...rootStyles,
             ...panelOptions?.style,
-            zIndex: pstate === 'background' ? 0 : 10,
+            zIndex: panelState === 'background' ? 0 : 10,
             paddingTop: SAFE_INSETS_TOP,
-            animationDuration: `${ANIMATION_DURATION}ms`,
+            transform: `translateX(${window.innerWidth}px)`,
           }}
-          className={getPanelClass(previousState, pstate)}
         >
           {props.children}
         </div>

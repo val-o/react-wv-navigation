@@ -3,13 +3,15 @@ import { Panel } from './transitions/Panel';
 import { makeSwipeController } from './swipeController';
 import { styledLogMessage, useLazyRef } from '../utils';
 import * as RouterState from '../core/RouterState';
-import { Router } from './types';
+import { RouterController } from './types';
 import { useLogger } from './useLogger';
 import { useOptionsContext } from '../WVNavigationProvider';
+import { useRouting, useRoutingContext } from './RoutingContext';
+import { useLatest } from 'react-use';
 
-export const MemoryRouter: React.FC<{
+export const Router: React.FC<{
   id: string;
-  controls?: Router;
+  controls?: RouterController;
   initialState?: RouterState.HistoryEntry[];
   zIndex: number;
   isActive: boolean;
@@ -18,12 +20,14 @@ export const MemoryRouter: React.FC<{
 
   const log = useLogger();
   const {} = useOptionsContext();
+  const routingCtx = useRoutingContext();
   const clearHistoryOptions = useRef<RouterState.ClearHistoryOptions>();
   const swipeController = useLazyRef(makeSwipeController).current;
 
   const [[state, error], setState] = useState<
     [RouterState.State, Error | undefined]
   >(() => [RouterState.create(initialState), undefined]);
+  const stateRef = useLatest(state);
 
   useEffect(() => {
     const keys = state.items.map(s => s.key).join(',');
@@ -41,18 +45,25 @@ export const MemoryRouter: React.FC<{
     reportError(error);
   }, [error]);
 
-  const pushScreen = useCallback((options: RouterState.PushOptions) => {
-    log(
-      ...styledLogMessage(
-        `Router[${id}] Pushing screen with key ${options.key}`
-      )
-    );
-    setState(([st]) => RouterState.pushScreen(st, options));
-  }, []);
+  const pushScreen = useCallback(
+    (options: RouterState.PushOptions & { bringToFront: boolean }) => {
+      log(
+        ...styledLogMessage(
+          `Router[${id}] Pushing screen with key ${options.key}`
+        )
+      );
+      setState(([st]) => RouterState.pushScreen(st, options));
+      if (options.bringToFront !== false) {
+        routingCtx.bringToFront(id);
+      }
+    },
+    []
+  );
 
   const popScreen = useCallback((options?: RouterState.PopOptions) => {
     log(...styledLogMessage(`Router[${id}] Start popping active screen`));
-    setState(([st]) => RouterState.popScreen(st, options));
+    const newState = RouterState.popScreen(stateRef.current, options);
+    setState(newState);
   }, []);
 
   const handleEnteredScreen = useCallback(() => {
@@ -62,12 +73,15 @@ export const MemoryRouter: React.FC<{
     clearHistoryOptions.current = undefined;
   }, []);
 
-  const handleScreenExited = useCallback(
-    () => setState(([st]) => [RouterState.screenExited(st), undefined]),
-    []
-  );
+  const handleScreenExited = useCallback(() => {
+    const newState = RouterState.screenExited(stateRef.current);
+    setState(() => [newState, undefined]);
+    if (newState.items.length === 0) {
+      routingCtx.exitRouter(id);
+    }
+  }, []);
 
-  const contextValue: Router = useRef({
+  const contextValue: RouterController = useRef({
     popScreen: popScreen,
     markToClearHistoryUntil: (options: RouterState.ClearHistoryOptions) => {
       clearHistoryOptions.current = options;
@@ -116,7 +130,7 @@ export const MemoryRouter: React.FC<{
           style={{
             ...rootStyles,
             zIndex: isActive ? zIndex : 0,
-            opacity: isActive ? 1 : 0,
+            // opacity: isActive ? 1 : 0,
           }}
         >
           {/* We show overlay to prevent clicks on animating panels */}
