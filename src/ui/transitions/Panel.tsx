@@ -121,6 +121,10 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
           panelRef.current.style.transition = ANIMATION_TRANSITION;
           setTimeout(() => {
             onAnimationDone();
+            panelStateChangeSubject.next({
+              previousState: previousState,
+              currentState: panelState,
+            });
             if (panelRef.current) {
               panelRef.current.style.transition = 'none';
               isAnimating.current = false;
