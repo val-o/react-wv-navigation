@@ -9,6 +9,7 @@ export type HistoryEntry = {
 
 export interface State {
   items: HistoryEntry[];
+  queuedItems: HistoryEntry[];
   isNavigating: boolean;
   poppingEntry: HistoryEntry | undefined;
 }
@@ -22,17 +23,24 @@ export const create = (initialItems?: HistoryEntry[]): State => {
   return {
     isNavigating: false,
     items: initialItems ?? [],
+    queuedItems: [],
     poppingEntry: undefined,
   };
 };
 
 export interface PushOptions {
   /**
+   * React element of screen
+   */
+  screen: RouterState.ReactElement;
+  /**
+   * Unique key
+   */
+  key: string;
+  /**
    * If next was pushed after this one, whether we should store this screen in history
    */
   keepInHistory?: boolean;
-  screen: RouterState.ReactElement;
-  key: string;
 }
 
 export interface PopOptions<TPopExtras extends object = {}> {
@@ -59,12 +67,26 @@ export const pushScreen = (
   state: State,
   options: PushOptions
 ): [State, PushError | undefined] => {
-  if (state.isNavigating) {
-    return [state, navigationInProgressError];
+  if (
+    state.items.some(entry => entry.key === options.key) ||
+    state.queuedItems.some(entry => entry.key === options.key)
+  ) {
+    return [state, { type: 'DuplicateKeyFound', key: options.key }];
   }
 
-  if (state.items.some(entry => entry.key === options.key)) {
-    return [state, { type: 'DuplicateKeyFound', key: options.key }];
+  if (state.isNavigating) {
+    const entry: HistoryEntry = {
+      key: options.key,
+      originalScreenEl: options.screen,
+      keepInHistory: options.keepInHistory,
+    };
+    return [
+      {
+        ...state,
+        queuedItems: [...state.queuedItems, entry],
+      },
+      undefined,
+    ];
   }
 
   const newItems = [
@@ -123,6 +145,7 @@ export const popScreen = (
   if (newActiveScreenIdx < 0) {
     return [
       {
+        ...state,
         isNavigating: true,
         items: [],
         poppingEntry: activeScreen,
@@ -138,14 +161,18 @@ export const popScreen = (
     // Setting pop extras
     newItems[newItems.length - 1] = {
       ...newActiveScreen,
-      originalScreenEl: RouterState.cloneElement(newActiveScreen.originalScreenEl, {
-        popExtras: options?.popExtras || undefined,
-      } as PopExtrasProps<object>),
+      originalScreenEl: RouterState.cloneElement(
+        newActiveScreen.originalScreenEl,
+        {
+          popExtras: options?.popExtras || undefined,
+        } as PopExtrasProps<object>
+      ),
     };
   }
 
   return [
     {
+      ...state,
       isNavigating: true,
       poppingEntry: {
         key: activeScreen.key,
@@ -158,9 +185,15 @@ export const popScreen = (
 };
 
 export const screenEntered = (
-  st: State,
+  state: State,
   opts: ClearHistoryOptions | undefined
 ): [State, ScreenEnteredError | undefined] => {
+  const clearedItems = state.items.filter(
+    (it, idx) => !(idx !== state.items.length - 1 && it.keepInHistory === false)
+  );
+
+  // Remove items which are not supposed to be kept in history
+  // We do it here to let animation finish
   const cleanupItems = (st: State): State => {
     return {
       ...st,
@@ -171,10 +204,24 @@ export const screenEntered = (
     };
   };
 
-  const [newSt, error] = clearHistory(st, opts);
+  const [newSt, error] = clearHistory(state, opts);
 
   if (error) {
     return [{ ...newSt, isNavigating: false }, error];
+  }
+
+  if (state.queuedItems.length > 0) {
+    const queuedEntry = state.queuedItems[0];
+    const queuedItems = state.queuedItems.slice(1);
+    return [
+      {
+        ...state,
+        isNavigating: true,
+        queuedItems: queuedItems,
+        items: [...clearedItems, queuedEntry],
+      },
+      undefined,
+    ];
   }
 
   return [

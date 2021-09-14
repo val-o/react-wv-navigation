@@ -5,7 +5,7 @@ export { PanelBody, PanelBodyProps } from './ui/built-in/PanelBody';
 export { PanelHeader } from './ui/built-in/PanelHeader';
 export { PopExtrasProps as IPopExtrasProps } from './core/RouterState';
 export { RouterController as Router } from './ui/types';
-export { useScrollState } from './ui/usePanelScrollFade';
+export { useScrollState } from './ui/useScrollState';
 export { useSwipeBack } from './ui/useSwipeBack';
 export { usePanelStateEvents } from './ui/PanelContext';
 export { WVNavigationProvider } from './WVNavigationProvider';

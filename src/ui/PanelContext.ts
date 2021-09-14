@@ -7,9 +7,11 @@ export interface IPanelStateChangeArgs {
   previousState: PanelState | undefined;
 }
 
+export type PanelScrollState = 'top' | 'interim';
+
 export interface PanelContextValue {
   setSwipeBackHandler: (handler: (() => void) | undefined) => void;
-  panelBodyScroll$: Subject<'top' | 'interim'>;
+  panelBodyScroll$: Subject<PanelScrollState>;
   /**
    * Userful when there is a guard on going back, so if user rejects going back you can move panel back by using this method
    */

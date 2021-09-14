@@ -42,7 +42,6 @@ function App() {
   return (
     <WVNavigationProvider value={{ loggingEnabled: true }}>
       <Routing routers={ROUTERS.routers}>
-        {/* <MultiTabApp /> */}
         <Main />
       </Routing>
     </WVNavigationProvider>
@@ -193,9 +192,10 @@ const Main: React.FC = () => {
 
   useEffect(() => {
     pushScreen({ key: 'root', screen: <LongTextScreen /> });
+    pushScreen({ key: 'root-1', screen: <LongTextScreen /> });
   }, [pushScreen]);
 
-  return null;
+  return <> </>;
 };
 
 export default App;

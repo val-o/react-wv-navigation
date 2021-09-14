@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useRef } from 'react';
 import { SAFE_INSETS_BOTTOM, SAFE_INSETS_TOP } from '../constants';
 import { PANEL_HEADER_HEIGHT } from '../constants';
-import { useScrollState } from '../usePanelScrollFade';
+import { useScrollState } from '../useScrollState';
 
 const rootStyles: React.CSSProperties = {
   flex: '1 1 auto',
