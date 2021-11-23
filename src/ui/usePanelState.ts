@@ -5,18 +5,14 @@ import { PanelState } from './types';
 type StrictExclude<T, U extends T> = T extends U ? never : T;
 
 type EventListeners = {
-  onBecomeActive: (previousState: PanelState) => void;
-  
-}
-
-export const usePanelStateEvents = ({
-  onBecomeActive,
-}: {
-  onBecomeActive?: (
+  onBecomeActive: (
     previousState: StrictExclude<PanelState, 'active'> | undefined
   ) => void;
-}) => {
+};
+
+export const usePanelStateEvents = ({ onBecomeActive }: EventListeners) => {
   const ctx = usePanelContext();
+
   useEffect(() => {
     const sub = ctx.panelStateChange$.subscribe(
       ({ currentState, previousState }) => {
@@ -28,5 +24,5 @@ export const usePanelStateEvents = ({
       }
     );
     return () => sub.unsubscribe();
-  });
+  }, [onBecomeActive]);
 };

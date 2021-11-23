@@ -7,7 +7,7 @@ export { PopExtrasProps as IPopExtrasProps } from './core/RouterState';
 export { RouterController as Router } from './ui/types';
 export { useScrollState } from './ui/useScrollState';
 export { useSwipeBack } from './ui/useSwipeBack';
-export { usePanelStateEvents } from './ui/PanelContext';
+export { usePanelStateEvents } from './ui/usePanelState';
 export { WVNavigationProvider } from './WVNavigationProvider';
 export { RoutingOptions, RouterOptions } from './core/RoutingState';
 export { Panel } from './ui/transitions/Panel';

@@ -21,27 +21,3 @@ export interface PanelContextValue {
 
 export const PanelContext = React.createContext<PanelContextValue>({} as any);
 export const usePanelContext = () => useContext(PanelContext);
-
-type StrictExclude<T, U extends T> = T extends U ? never : T;
-
-export const usePanelStateEvents = ({
-  onBecomeActive,
-}: {
-  onBecomeActive?: (
-    previousState: StrictExclude<PanelState, 'active'> | undefined
-  ) => void;
-}) => {
-  const ctx = usePanelContext();
-  useEffect(() => {
-    const sub = ctx.panelStateChange$.subscribe(
-      ({ currentState, previousState }) => {
-        if (currentState === 'active') {
-          onBecomeActive?.(
-            previousState as StrictExclude<PanelState, 'active'> | undefined
-          );
-        }
-      }
-    );
-    return () => sub.unsubscribe();
-  });
-};
