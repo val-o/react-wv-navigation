@@ -1,114 +1,93 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import {
-  Routing,
-  RouterOptions,
   PanelBody,
   PanelHeader,
   useRouter,
   usePanelContext,
   Router,
-  IPopExtrasProps,
-  RoutingOptions,
+  RouterController,
   WVNavigationProvider,
-  useActiveRouter,
-  useRouting,
+  PopExtrasProps,
 } from 'react-wv-navigation';
 import 'react-wv-navigation/src/animation.css';
 import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
 import { Restore, Favorite, LocationOn } from '@material-ui/icons';
 
-const ROUTERS: RoutingOptions<any> = {
-  routers: {
-    modal: {
-      zIndex: 10,
-    },
-    recents: {
-      zIndex: 10,
-    },
-    favorites: {
-      zIndex: 10,
-    },
-    home: {
-      zIndex: 10,
-    },
-    default: {
-      zIndex: 10,
-    },
-  },
-};
+const controller = new RouterController(true);
+console.log(controller)
 
 function App() {
   return (
     <WVNavigationProvider value={{ loggingEnabled: true }}>
-      <Routing routers={ROUTERS.routers}>
+      <Router controller={controller} zIndex={10}>
         <Main />
-      </Routing>
+      </Router>
     </WVNavigationProvider>
   );
 }
 
-const BottomNav: React.FC = () => {
-  const { bringToFront } = useRouting();
-  const activeRouterId = useActiveRouter();
+// const BottomNav: React.FC = () => {
+//   const { bringToFront } = useRouting();
+//   const activeRouterId = useActiveRouter();
 
-  return (
-    <BottomNavigation
-      // value={value}
-      // onChange={(event, newValue) => {
-      //   setValue(newValue);
-      // }}
-      style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        zIndex: 20,
-        borderTop: `1px solid black`,
-      }}
-      showLabels
-      value={activeRouterId}
-    >
-      <BottomNavigationAction
-        onClick={() => bringToFront('home')}
-        label="home"
-        value="home"
-        icon={<LocationOn />}
-      />
-      <BottomNavigationAction
-        onClick={() => bringToFront('recents')}
-        label="Recents"
-        value="recents"
-        icon={<Restore />}
-      />
-      <BottomNavigationAction
-        onClick={() => bringToFront('favorites')}
-        label="Favorites"
-        value="favorites"
-        icon={<Favorite />}
-      />
-    </BottomNavigation>
-  );
-};
+//   return (
+//     <BottomNavigation
+//       // value={value}
+//       // onChange={(event, newValue) => {
+//       //   setValue(newValue);
+//       // }}
+//       style={{
+//         position: 'absolute',
+//         bottom: 0,
+//         left: 0,
+//         right: 0,
+//         zIndex: 20,
+//         borderTop: `1px solid black`,
+//       }}
+//       showLabels
+//       value={activeRouterId}
+//     >
+//       <BottomNavigationAction
+//         onClick={() => bringToFront('home')}
+//         label="home"
+//         value="home"
+//         icon={<LocationOn />}
+//       />
+//       <BottomNavigationAction
+//         onClick={() => bringToFront('recents')}
+//         label="Recents"
+//         value="recents"
+//         icon={<Restore />}
+//       />
+//       <BottomNavigationAction
+//         onClick={() => bringToFront('favorites')}
+//         label="Favorites"
+//         value="favorites"
+//         icon={<Favorite />}
+//       />
+//     </BottomNavigation>
+//   );
+// };
 
-const MultiTabApp: React.FC = () => {
-  const defaultRouter = useRouter('default');
-  const recentsRouter = useRouter('recents');
-  const favoritesRouter = useRouter('favorites');
-  const homeRouter = useRouter('home');
+// const MultiTabApp: React.FC = () => {
+//   const defaultRouter = useRouter('default');
+//   const recentsRouter = useRouter('recents');
+//   const favoritesRouter = useRouter('favorites');
+//   const homeRouter = useRouter('home');
 
-  useEffect(() => {
-    recentsRouter.pushScreen({ key: 'recents', screen: <RecentsScreen /> });
-    favoritesRouter.pushScreen({ key: 'home', screen: <FavoritesScreen /> });
-    homeRouter.pushScreen({ key: 'home', screen: <HomeScreen /> });
-  }, [defaultRouter, favoritesRouter, homeRouter, recentsRouter]);
+//   useEffect(() => {
+//     recentsRouter.pushScreen({ key: 'recents', screen: <RecentsScreen /> });
+//     favoritesRouter.pushScreen({ key: 'home', screen: <FavoritesScreen /> });
+//     homeRouter.pushScreen({ key: 'home', screen: <HomeScreen /> });
+//   }, [defaultRouter, favoritesRouter, homeRouter, recentsRouter]);
 
-  return (
-    <>
-      <BottomNav />
-    </>
-  );
-};
+//   return (
+//     <>
+//       <BottomNav />
+//     </>
+//   );
+// };
 
 const FavoritesScreen: React.FC = () => {
   const { pushScreen, popScreen } = useRouter();
@@ -213,7 +192,7 @@ const LongTextScreen: React.FC = () => {
             const key = count++ + '';
             pushScreen({
               key: key,
-              screen: <TestScreen currentRouter={router} screnKey={key} />,
+              screen: <TestScreen screnKey={key} />,
             });
           }}
         >
@@ -265,18 +244,11 @@ const Interactive: React.FC = () => {
 let count = 1;
 type PopExtra = { someExtra: string };
 const TestScreen: React.FC<{
-  currentRouter: Router;
   screnKey: string;
   withGuard?: boolean;
   // router: IRouter;
-} & IPopExtrasProps<PopExtra>> = props => {
-  const { currentRouter } = props;
-  const {
-    pushScreen,
-    popScreen,
-    markToClearHistoryUntil,
-  } = props.currentRouter;
-  const secondRouter = useRouter('modal');
+} & PopExtrasProps<PopExtra>> = props => {
+  const { pushScreen, popScreen, markToClearHistoryUntil } = useRouter();
   const [textState, setTextState] = useState('');
   const [backToKey, setBackToKey] = useState('');
   const [backToIncluding, setBackToIncluding] = useState(false);
@@ -317,12 +289,7 @@ const TestScreen: React.FC<{
         onClick={() => {
           const newKey = count++;
           pushScreen({
-            screen: (
-              <TestScreen
-                currentRouter={currentRouter}
-                screnKey={newKey.toString()}
-              />
-            ),
+            screen: <TestScreen screnKey={newKey.toString()} />,
             key: newKey.toString(),
           });
         }}
@@ -333,34 +300,12 @@ const TestScreen: React.FC<{
         onClick={() => {
           const newKey = count++;
           pushScreen({
-            screen: (
-              <TestScreen
-                currentRouter={currentRouter}
-                withGuard
-                screnKey={newKey.toString()}
-              />
-            ),
+            screen: <TestScreen withGuard screnKey={newKey.toString()} />,
             key: newKey.toString(),
           });
         }}
       >
         Next With Guard
-      </button>
-      <button
-        onClick={() => {
-          const newKey = count++;
-          secondRouter.pushScreen({
-            screen: (
-              <TestScreen
-                currentRouter={secondRouter}
-                screnKey={newKey.toString()}
-              />
-            ),
-            key: newKey.toString(),
-          });
-        }}
-      >
-        Next In Second router
       </button>
       <hr />
       <label>Clear history until Key</label>
@@ -385,9 +330,7 @@ const TestScreen: React.FC<{
           }
 
           pushScreen({
-            screen: (
-              <TestScreen currentRouter={currentRouter} screnKey={newKey} />
-            ),
+            screen: <TestScreen screnKey={newKey} />,
             key: newKey,
           });
         }}

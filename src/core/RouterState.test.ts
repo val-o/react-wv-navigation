@@ -5,6 +5,7 @@ const screenEl = React.createElement('div');
 const initialState: RoutingState.State = {
   isNavigating: false,
   items: [],
+  queuedItems: [],
   poppingEntry: undefined,
 };
 describe('Routing state', () => {
@@ -20,6 +21,7 @@ describe('Routing state', () => {
           isNavigating: true,
           items: [{ key: '1', originalScreenEl: screenEl }],
           poppingEntry: undefined,
+          queuedItems: [],
         } as RoutingState.State,
         undefined,
       ]);
@@ -34,6 +36,7 @@ describe('Routing state', () => {
           },
         ],
         poppingEntry: undefined,
+        queuedItems: [],
       };
       const newSt = RoutingState.pushScreen(st, {
         key: '1',
@@ -45,6 +48,7 @@ describe('Routing state', () => {
           isNavigating: false,
           items: [{ key: '1', originalScreenEl: screenEl }],
           poppingEntry: undefined,
+          queuedItems: [],
         } as RoutingState.State,
         { type: 'DuplicateKeyFound', key: '1' } as RoutingState.PushError,
       ]);
@@ -82,6 +86,7 @@ describe('Routing state', () => {
           isNavigating: true,
           items: [{ key: '1', originalScreenEl: screenEl }],
           poppingEntry: { key: '2', originalScreenEl: screenEl },
+          queuedItems: [],
         } as RoutingState.State,
         undefined,
       ]);
@@ -129,6 +134,7 @@ describe('Routing state', () => {
             key: '2',
             originalScreenEl: screenEl,
           },
+          queuedItems: [],
         } as RoutingState.State,
         undefined,
       ]);
@@ -149,6 +155,7 @@ describe('Routing state', () => {
           isNavigating: true,
           items: [{ key: '1', originalScreenEl: screenEl }],
           poppingEntry: { key: '2', originalScreenEl: screenEl },
+          queuedItems: [],
         } as RoutingState.State,
         undefined,
       ]);
@@ -172,6 +179,7 @@ describe('Routing state', () => {
           isNavigating: true,
           items: [{ key: '1', originalScreenEl: screenEl }],
           poppingEntry: { key: '3', originalScreenEl: screenEl },
+          queuedItems: [],
         } as RoutingState.State,
         undefined,
       ]);
@@ -196,6 +204,7 @@ describe('Routing state', () => {
           isNavigating: true,
           items: [{ key: '1', originalScreenEl: screenEl }],
           poppingEntry: { key: '3', originalScreenEl: screenEl },
+          queuedItems: [],
         } as RoutingState.State,
         undefined,
       ]);
@@ -228,6 +237,7 @@ describe('Routing state', () => {
           },
         ],
         poppingEntry: undefined,
+        queuedItems: [],
       };
       const newSt = RoutingState.screenEntered(st, undefined);
 
@@ -241,6 +251,7 @@ describe('Routing state', () => {
             },
           ],
           poppingEntry: undefined,
+          queuedItems: [],
         } as RoutingState.State,
         undefined,
       ]);

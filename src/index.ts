@@ -1,13 +1,12 @@
-export { Routing, useRouter, usePanelContext, PanelState } from './ui';
-export { useActiveRouter } from './ui/Routing';
-export { useRouting } from './ui/RoutingContext';
+export { useRouter, usePanelContext, PanelState } from './ui';
 export { PanelBody, PanelBodyProps } from './ui/built-in/PanelBody';
 export { PanelHeader } from './ui/built-in/PanelHeader';
-export { PopExtrasProps as IPopExtrasProps } from './core/RouterState';
-export { RouterController as Router } from './ui/types';
+export { PopExtrasProps } from './core/RouterState';
 export { useScrollState } from './ui/useScrollState';
 export { useSwipeBack } from './ui/useSwipeBack';
+export { Router } from './ui/Router';
 export { usePanelStateEvents } from './ui/usePanelState';
 export { WVNavigationProvider } from './WVNavigationProvider';
 export { RoutingOptions, RouterOptions } from './core/RoutingState';
 export { Panel } from './ui/transitions/Panel';
+export { RouterController, RouterApi } from './core/RouterController';

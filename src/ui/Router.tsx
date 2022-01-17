@@ -1,105 +1,31 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Panel } from './transitions/Panel';
+import React, { useEffect, useState } from 'react';
+import { RouterController } from '../core/RouterController';
+import { useLazyRef } from '../utils';
+import { RouterContext } from './RouterContext';
 import { makeSwipeController } from './swipeController';
-import { styledLogMessage, useLazyRef } from '../utils';
-import * as RouterState from '../core/RouterState';
-import { RouterController } from './types';
-import { useLogger } from './useLogger';
-import { useOptionsContext } from '../WVNavigationProvider';
-import { useRouting, useRoutingContext } from './RoutingContext';
-import { useLatest } from 'react-use';
+import { Panel } from './transitions/Panel';
 
-export const Router: React.FC<{
-  id: string;
-  controls?: RouterController;
-  initialState?: RouterState.HistoryEntry[];
+type RouterProps = {
+  controller: RouterController;
   zIndex: number;
-  isActive: boolean;
-}> = ({ initialState, children, zIndex, isActive, controls, id }) => {
-  const isRenderedRef = useRef(false);
+};
 
-  const log = useLogger();
-  const {} = useOptionsContext();
-  const routingCtx = useRoutingContext();
-  const clearHistoryOptions = useRef<RouterState.ClearHistoryOptions>();
+export const Router: React.FC<RouterProps> = ({
+  children,
+  zIndex,
+  controller,
+}) => {
   const swipeController = useLazyRef(makeSwipeController).current;
 
-  const [[state, error], setState] = useState<
-    [RouterState.State, Error | undefined]
-  >(() => [RouterState.create(initialState), undefined]);
-  const stateRef = useLatest(state);
+  const [routerState, setRouterState] = useState(controller.routerState);
 
   useEffect(() => {
-    const keys = state.items.map(s => s.key).join(',');
-    log(...styledLogMessage(`Router[${id}] state [${keys}]`), state);
-  }, [state]);
+    const subs = controller.routerState$.subscribe(setRouterState);
 
-  const reportError = useCallback((error: Error | undefined) => {
-    if (!error) {
-      return;
-    }
-    log(...getErrorMessage(error));
-  }, []);
+    return () => subs.unsubscribe();
+  }, [controller]);
 
-  useEffect(() => {
-    reportError(error);
-  }, [error]);
-
-  const pushScreen = useCallback(
-    (options: RouterState.PushOptions & { bringToFront: boolean }) => {
-      log(
-        ...styledLogMessage(
-          `Router[${id}] Pushing screen with key ${options.key}`
-        )
-      );
-      setState(([st]) => RouterState.pushScreen(st, options));
-      if (options.bringToFront !== false) {
-        routingCtx.bringToFront(id);
-      }
-    },
-    []
-  );
-
-  const popScreen = useCallback((options?: RouterState.PopOptions) => {
-    log(...styledLogMessage(`Router[${id}] Start popping active screen`));
-    const newState = RouterState.popScreen(stateRef.current, options);
-    setState(newState);
-  }, []);
-
-  const handleEnteredScreen = useCallback(() => {
-    setState(([st]) =>
-      RouterState.screenEntered(st, clearHistoryOptions.current)
-    );
-    clearHistoryOptions.current = undefined;
-  }, []);
-
-  const handleScreenExited = useCallback(() => {
-    const newState = RouterState.screenExited(stateRef.current);
-    setState(() => [newState, undefined]);
-    if (newState.items.length === 0) {
-      routingCtx.exitRouter(id);
-    }
-  }, []);
-
-  const contextValue: RouterController = useRef({
-    popScreen: popScreen,
-    markToClearHistoryUntil: (options: RouterState.ClearHistoryOptions) => {
-      clearHistoryOptions.current = options;
-    },
-    pushScreen: pushScreen,
-  }).current;
-
-  if (!isRenderedRef.current) {
-    // This is not idiomatic react piece of code.
-    if (controls) {
-      controls.markToClearHistoryUntil = contextValue.markToClearHistoryUntil;
-      controls.popScreen = contextValue.popScreen;
-      controls.pushScreen = contextValue.pushScreen;
-    }
-    isRenderedRef.current = true;
-  }
-
-  const screenEls = state.items.map((it, idx, items) => {
+  const screenEls = routerState.items.map((it, idx, items) => {
     return (
       <Panel
         swipeController={swipeController}
@@ -113,7 +39,7 @@ export const Router: React.FC<{
             : 'none'
         }
         key={it.key}
-        onAnimationDone={handleEnteredScreen}
+        onEntered={controller.onScreenEntered}
       >
         {it.originalScreenEl}
       </Panel>
@@ -121,31 +47,30 @@ export const Router: React.FC<{
   });
 
   return (
-    <>
+    <RouterContext.Provider value={controller}>
       {/*
         Завернуто в массив , тк реакт начинает странно себя вести(пропадает стейт панелек который далеко в истории) если вставлять обычными чайлдами
       */}
-      {state.items.length || state.poppingEntry ? (
+      {routerState.items.length || routerState.poppingEntry ? (
         <div
           style={{
             ...rootStyles,
-            zIndex: isActive ? zIndex : 0,
-            // opacity: isActive ? 1 : 0,
+            zIndex: zIndex,
           }}
         >
           {/* We show overlay to prevent clicks on animating panels */}
-          {state.isNavigating && overlayEl}
+          {routerState.isNavigating && overlayEl}
           {screenEls.concat(
-            state.poppingEntry ? (
+            routerState.poppingEntry ? (
               <Panel
                 swipeController={swipeController}
                 canGoBack={false}
                 state={'popped'}
-                panelId={state.poppingEntry.key}
-                key={state.poppingEntry.key}
-                onAnimationDone={handleScreenExited}
+                panelId={routerState.poppingEntry.key}
+                key={routerState.poppingEntry.key}
+                onExited={controller.onScreenExited}
               >
-                {state.poppingEntry.originalScreenEl}
+                {routerState.poppingEntry.originalScreenEl}
               </Panel>
             ) : (
               []
@@ -154,7 +79,7 @@ export const Router: React.FC<{
         </div>
       ) : null}
       {children}
-    </>
+    </RouterContext.Provider>
   );
 };
 
@@ -178,43 +103,3 @@ const overlayStyles: React.CSSProperties = {
   background: 'transaprent',
 };
 const overlayEl = <div style={overlayStyles}></div>;
-
-type Error =
-  | RouterState.PopError
-  | RouterState.PushError
-  | RouterState.ClearHistoryError
-  | RouterState.ScreenEnteredError;
-
-const getErrorMessage = (
-  error:
-    | RouterState.PopError
-    | RouterState.PushError
-    | RouterState.ClearHistoryError
-    | RouterState.ScreenEnteredError
-): string[] => {
-  switch (error.type) {
-    case 'NavigationInProgress': {
-      return styledLogMessage(
-        `Trying to navigate while navigation is in progress. Doing nothing...`
-      );
-    }
-    case 'NewScreenNotFound': {
-      return styledLogMessage(`Screen wasn't found during poping`);
-    }
-    case 'NoActiveScreen': {
-      return styledLogMessage(
-        `Cannot pop as there is no screens before active`
-      );
-    }
-    case 'ClearHistoryUntilNotFound': {
-      return styledLogMessage(
-        `Couldn't find screen with key ${error.key} for clearing, doing nothing`
-      );
-    }
-    case 'DuplicateKeyFound': {
-      return styledLogMessage(
-        `Trying to push screen with non-unique key: ${error.key}`
-      );
-    }
-  }
-};

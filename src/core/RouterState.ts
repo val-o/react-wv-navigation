@@ -1,9 +1,10 @@
-import RouterState from 'react';
+import RoutingState from 'react';
 import { compact, isDefined, last } from '../utils';
+import { Direction } from './Direction';
 
 export type HistoryEntry = {
   key: string;
-  originalScreenEl: RouterState.ReactElement;
+  originalScreenEl: RoutingState.ReactElement;
   keepInHistory?: boolean;
 };
 
@@ -32,7 +33,7 @@ export interface PushOptions {
   /**
    * React element of screen
    */
-  screen: RouterState.ReactElement;
+  screen: RoutingState.ReactElement;
   /**
    * Unique key
    */
@@ -41,6 +42,9 @@ export interface PushOptions {
    * If next was pushed after this one, whether we should store this screen in history
    */
   keepInHistory?: boolean;
+
+  enterDirection?: Direction;
+  exitDirection?: Direction;
 }
 
 export interface PopOptions<TPopExtras extends object = {}> {
@@ -161,7 +165,7 @@ export const popScreen = (
     // Setting pop extras
     newItems[newItems.length - 1] = {
       ...newActiveScreen,
-      originalScreenEl: RouterState.cloneElement(
+      originalScreenEl: RoutingState.cloneElement(
         newActiveScreen.originalScreenEl,
         {
           popExtras: options?.popExtras || undefined,

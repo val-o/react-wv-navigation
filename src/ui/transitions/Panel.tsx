@@ -12,7 +12,7 @@ import { Subject } from 'rxjs';
 import { SAFE_INSETS_TOP } from '../constants';
 import {
   PanelContextValue,
-  IPanelStateChangeArgs,
+  PanelStateChangeArgs,
   PanelContext,
 } from '../PanelContext';
 import { SwipeController } from '../swipeController';
@@ -76,9 +76,11 @@ export interface IPanelAnimationProps {
   // For debugging purposes
   panelId: string;
   state: PanelState;
-  onAnimationDone: () => void;
   canGoBack: boolean;
   swipeController: SwipeController;
+  onEntered?: () => void;
+  onExited?: () => void;
+  onAnimationDone?: () => void;
 }
 export const Panel: React.FC<IPanelAnimationProps> = props => {
   const {
@@ -102,7 +104,7 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
   });
 
   const panelStateChangeSubject = useMemo(
-    () => new Subject<IPanelStateChangeArgs>(),
+    () => new Subject<PanelStateChangeArgs>(),
     []
   );
 
@@ -111,6 +113,9 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
     if (!panelRef.current) {
       return;
     }
+    console.log(
+      `panel ${propsRef.current.panelId} prev: ${previousState}, next: ${panelState}`
+    );
     const handleNewState = (state: PanelState) => {
       if (state !== 'none') {
         if (panelRef.current) {
@@ -120,7 +125,16 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
           )}px)`;
           panelRef.current.style.transition = ANIMATION_TRANSITION;
           setTimeout(() => {
-            onAnimationDone();
+            if (
+              (previousState === undefined || previousState === 'none') &&
+              panelState === 'active'
+            ) {
+              propsRef.current.onEntered?.();
+            }
+            if (previousState === 'active' && panelState === 'popped') {
+              propsRef.current.onExited?.();
+            }
+            onAnimationDone?.();
             panelStateChangeSubject.next({
               previousState: previousState,
               currentState: panelState,
@@ -242,34 +256,21 @@ export const Panel: React.FC<IPanelAnimationProps> = props => {
 
   return (
     <PanelContext.Provider value={contextValue}>
-      {/* Чтобы повысить перфоманс и при этом дерэжать экраны в памяти, оборачиваем тем же animated.div но не показываем.
-      Если обернуть обычным дивом, реакт выгрузит чилдренов - стейт потеряется */}
-      {panelState === 'none' ? (
-        <div
-          key="1"
-          ref={panelRef}
-          style={{
-            display: 'none',
-          }}
-        >
-          {props.children}
-        </div>
-      ) : (
-        <div
-          {...bind()}
-          key="1"
-          ref={panelRef}
-          style={{
-            ...rootStyles,
-            ...panelOptions?.style,
-            zIndex: panelState === 'background' ? 0 : 10,
-            paddingTop: SAFE_INSETS_TOP,
-            transform: `translateX(${window.innerWidth}px)`,
-          }}
-        >
-          {props.children}
-        </div>
-      )}
+      <div
+        {...bind()}
+        key="1"
+        ref={panelRef}
+        style={{
+          ...rootStyles,
+          ...panelOptions?.style,
+          display: panelState === 'none' ? 'none' : rootStyles.display,
+          zIndex: panelState === 'background' ? 0 : 10,
+          paddingTop: SAFE_INSETS_TOP,
+          transform: `translateX(${window.innerWidth}px)`,
+        }}
+      >
+        {props.children}
+      </div>
     </PanelContext.Provider>
   );
 };
